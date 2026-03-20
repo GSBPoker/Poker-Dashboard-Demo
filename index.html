@@ -43,10 +43,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 #updated{font-family:var(--mono);font-size:10px;color:var(--text3)}
 
 /* FILTERS */
-.filters{padding:10px 28px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
+.filters{padding:10px 28px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .fg{display:flex;flex-direction:column;gap:4px}
 .fl{font-family:var(--mono);font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
-.date-wrap{display:flex;gap:6px;align-items:center}
+.date-wrap{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 input[type=date]{font-family:var(--mono);font-size:11px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;cursor:pointer;outline:none;width:130px}
 input[type=date]:focus{border-color:var(--green)}
 input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.4)}
@@ -77,7 +77,7 @@ select.game-sel:focus{border-color:var(--green)}
 #filter-count{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap;align-self:center}
 
 /* NAV */
-.nav{display:flex;padding:0 28px;border-bottom:1px solid var(--border)}
+.nav{display:flex;padding:0 28px;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}
 .nav-btn{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:12px 14px;color:var(--text3);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;transition:color .15s,border-color .15s}
 .nav-btn:hover{color:var(--text2)}
 .nav-btn.active{color:var(--green);border-bottom-color:var(--green)}
@@ -110,7 +110,7 @@ select.game-sel:focus{border-color:var(--green)}
 
 /* TABLES */
 .tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:480px}
 th{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border2);white-space:nowrap;font-weight:400;cursor:pointer;user-select:none;transition:color .15s}
 th:hover{color:var(--text2)}
 th.sort-asc::after{content:' ↑'}
@@ -159,6 +159,67 @@ td.name{color:var(--text)}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── MOBILE RESPONSIVE ───────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .hdr{padding:12px 16px;flex-wrap:wrap;gap:8px}
+  .hdr-title{font-size:14px}
+  .hdr-right{gap:8px}
+  #updated{display:none}
+
+  .filters{padding:10px 16px;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .filters::-webkit-scrollbar{height:3px}
+  .fg{flex-shrink:0}
+  .filter-sep{display:none}
+  input[type=date]{width:110px;font-size:10px;padding:4px 6px}
+  .ms-btn{min-width:110px;font-size:10px;padding:4px 22px 4px 8px}
+  .ms-dropdown{min-width:180px}
+  select.game-sel{min-width:100px;font-size:10px}
+  .reset-btn{font-size:9px;padding:4px 10px}
+  #filter-count{display:none}
+
+  .nav{padding:0 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .nav::-webkit-scrollbar{height:3px}
+  .nav-btn{padding:10px 10px;font-size:9px;white-space:nowrap}
+
+  .main{padding:12px 16px}
+
+  .metrics{grid-template-columns:1fr 1fr;gap:8px}
+  .metrics .metric:last-child{grid-column:1/-1}
+  .metric{padding:12px 14px}
+  .m-val{font-size:20px}
+  .m-sub{font-size:9px}
+
+  .g2,.g2w,.g2eq,.g3,.g4{grid-template-columns:1fr;gap:10px}
+
+  .card{padding:12px}
+  .card-title{font-size:8px;margin-bottom:10px}
+
+  .ch{height:180px !important}
+
+  .bar-lbl{min-width:100px;font-size:10px}
+  .bar-val{font-size:10px;min-width:55px}
+
+  table{font-size:11px}
+  th{padding:6px 8px;font-size:8px}
+  td{padding:6px 8px;font-size:11px}
+
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  .badge{font-size:8px;padding:1px 5px}
+}
+
+@media (max-width: 480px) {
+  .hdr-title{font-size:13px}
+  .metrics{grid-template-columns:1fr}
+  .metrics .metric:last-child{grid-column:auto}
+  .m-val{font-size:22px}
+  .filters{padding:8px 12px}
+  .main{padding:10px 12px}
+  .nav-btn{padding:9px 8px;font-size:8px}
+  input[type=date]{width:100px;font-size:9px}
+  .ms-btn{min-width:90px;font-size:9px}
+}
 </style>
 </head>
 <body>
@@ -270,7 +331,6 @@ td.name{color:var(--text)}
     <button class="nav-btn" onclick="showTab('geo',this)">Geography</button>
     <button class="nav-btn" onclick="showTab('stakes',this)">Stakes</button>
     <button class="nav-btn" onclick="showTab('sessions',this)">Sessions</button>
-    <button class="nav-btn" onclick="showTab('ai',this)">AI Insights</button>
   </div>
 
   <div class="main">
@@ -340,94 +400,6 @@ td.name{color:var(--text)}
       </div>
     </div>
 
-    <!-- AI INSIGHTS -->
-    <div id="tab-ai" class="sec">
-      <div id="ai-key-prompt" style="display:none">
-        <div class="card" style="max-width:460px;margin:40px auto">
-          <div class="card-title">API key required</div>
-          <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">Enter your Anthropic API key. Stored only in your browser — never in any code or server.</p>
-          <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="width:100%;font-family:var(--mono);font-size:12px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;margin-bottom:12px;outline:none">
-          <button onclick="saveApiKey()" style="width:100%;font-family:var(--mono);font-size:11px;padding:10px;background:transparent;border:1px solid var(--green);border-radius:6px;color:var(--green);cursor:pointer;letter-spacing:.05em">Save key & continue</button>
-          <p style="font-size:10px;color:var(--text3);margin-top:10px;text-align:center">Get a key at console.anthropic.com</p>
-        </div>
-      </div>
-      <div id="ai-main" style="display:none">
-
-        <!-- Header -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-          <div>
-            <div style="font-size:15px;font-weight:500">AI Insights</div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px">Powered by Claude · Select an analysis type below</div>
-          </div>
-          <button onclick="clearApiKey()" style="font-family:var(--mono);font-size:10px;padding:6px 14px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text3);cursor:pointer">Change key</button>
-        </div>
-
-        <!-- Analysis type selector -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
-          <div class="ai-type-card active" id="atype-general" onclick="selectAiType('general')">
-            <div class="ai-type-icon">📊</div>
-            <div class="ai-type-label">General Analysis</div>
-            <div class="ai-type-sub">Performance summary, strengths & venue advice</div>
-          </div>
-          <div class="ai-type-card" id="atype-patterns" onclick="selectAiType('patterns')">
-            <div class="ai-type-icon">🔍</div>
-            <div class="ai-type-label">Pattern Detection</div>
-            <div class="ai-type-sub">Weekday, session length & streak patterns</div>
-          </div>
-          <div class="ai-type-card" id="atype-bankroll" onclick="selectAiType('bankroll')">
-            <div class="ai-type-icon">💰</div>
-            <div class="ai-type-label">Bankroll Health</div>
-            <div class="ai-type-sub">30-day vs 90-day trend with traffic light</div>
-          </div>
-          <div class="ai-type-card" id="atype-smart" onclick="selectAiType('smart')">
-            <div class="ai-type-icon">🎯</div>
-            <div class="ai-type-label">Smart Analysis</div>
-            <div class="ai-type-sub">Ask a specific question about your game</div>
-          </div>
-        </div>
-
-        <!-- Bankroll input (only shown for bankroll type) -->
-        <div id="bankroll-input-wrap" style="display:none;margin-bottom:16px">
-          <div class="card" style="display:flex;align-items:center;gap:14px;padding:14px 18px">
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Current bankroll</div>
-            <div style="display:flex;align-items:center;gap:6px;flex:1">
-              <span style="font-family:var(--mono);font-size:14px;color:var(--text2)">$</span>
-              <input type="number" id="bankroll-val" placeholder="50000" style="font-family:var(--mono);font-size:14px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;outline:none;width:160px" oninput="saveBankroll()">
-            </div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text3)">Stored in your browser</div>
-          </div>
-        </div>
-
-        <!-- Smart analysis input -->
-        <div id="smart-input-wrap" style="display:none;margin-bottom:16px">
-          <div class="card" style="padding:14px 18px">
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Your question</div>
-            <div style="display:flex;gap:10px">
-              <input type="text" id="smart-question" placeholder="e.g. Why is my win rate lower on weekends? Am I better at high stakes or low stakes?" style="flex:1;font-family:var(--mono);font-size:12px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;outline:none" onkeydown="if(event.key==='Enter')runAi()">
-            </div>
-            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-              <button class="smart-sugg" onclick="setQ(this)">Why is my hourly rate declining?</button>
-              <button class="smart-sugg" onclick="setQ(this)">Which stakes are most profitable per hour?</button>
-              <button class="smart-sugg" onclick="setQ(this)">How do I perform after a big loss?</button>
-              <button class="smart-sugg" onclick="setQ(this)">What is my best day of the week to play?</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Generate button -->
-        <div style="margin-bottom:20px">
-          <button onclick="runAi()" id="gen-btn" style="font-family:var(--mono);font-size:11px;padding:9px 28px;background:transparent;border:1px solid var(--green);border-radius:6px;color:var(--green);cursor:pointer;letter-spacing:.05em">✦ Generate</button>
-        </div>
-
-        <div id="ai-loading" style="display:none;text-align:center;padding:48px">
-          <div class="spin" style="margin:0 auto 12px"></div>
-          <div style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="ai-load-msg">Analysing your sessions...</div>
-        </div>
-        <div id="ai-error" style="display:none;background:rgba(248,113,113,.1);border:1px solid var(--red);border-radius:var(--r);padding:14px;font-family:var(--mono);font-size:11px;color:var(--red);line-height:1.7;margin-bottom:12px"></div>
-        <div id="ai-results" style="display:none"></div>
-        <div id="ai-empty" style="text-align:center;padding:48px;font-family:var(--mono);font-size:11px;color:var(--text3)">Select an analysis type above and click Generate</div>
-      </div>
-    </div>
 
   </div>
 </div>
@@ -851,7 +823,6 @@ function showTab(t,btn){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
   btn.classList.add('active');
-  if(t==='ai') checkApiKey();
 }
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
@@ -1111,332 +1082,6 @@ function renderSessions(){
   const byDate=[...FILTERED].sort((a,b)=>b.date-a.date);
   document.getElementById('sess-count').textContent=`— ${byDate.length} sessions`;
   document.getElementById('allSess').innerHTML=hdr+'<tbody>'+byDate.map(row).join('')+'</tbody>';
-}
-
-// ── AI INSIGHTS ───────────────────────────────────────────────────────────────
-let currentAiType = 'general';
-
-function checkApiKey(){
-  const key=localStorage.getItem('anthropic_key');
-  document.getElementById('ai-key-prompt').style.display=key?'none':'block';
-  document.getElementById('ai-main').style.display=key?'block':'none';
-  // Restore bankroll
-  const br=localStorage.getItem('bankroll_val');
-  if(br) document.getElementById('bankroll-val').value=br;
-}
-
-function saveApiKey(){
-  const key=document.getElementById('api-key-input').value.trim();
-  if(!key||!key.startsWith('sk-ant')){alert('Please enter a valid Anthropic API key');return;}
-  localStorage.setItem('anthropic_key',key);
-  checkApiKey();
-}
-
-function clearApiKey(){
-  localStorage.removeItem('anthropic_key');
-  document.getElementById('api-key-input').value='';
-  checkApiKey();
-}
-
-function saveBankroll(){
-  const val=document.getElementById('bankroll-val').value;
-  if(val) localStorage.setItem('bankroll_val',val);
-}
-
-function selectAiType(type){
-  currentAiType=type;
-  document.querySelectorAll('.ai-type-card').forEach(c=>c.classList.remove('active'));
-  document.getElementById('atype-'+type).classList.add('active');
-  document.getElementById('bankroll-input-wrap').style.display=type==='bankroll'?'block':'none';
-  document.getElementById('smart-input-wrap').style.display=type==='smart'?'block':'none';
-  document.getElementById('ai-results').style.display='none';
-  document.getElementById('ai-empty').style.display='block';
-  document.getElementById('ai-empty').textContent='Click Generate to run this analysis';
-  // Restore bankroll value
-  const br=localStorage.getItem('bankroll_val');
-  if(br) document.getElementById('bankroll-val').value=br;
-}
-
-function setQ(btn){
-  document.getElementById('smart-question').value=btn.textContent.trim();
-}
-
-function buildCoreSummary(){
-  const s=stats(FILTERED);
-  const byV={};
-  FILTERED.forEach(s=>{
-    if(!byV[s.location]) byV[s.location]={n:0,h:0,p:0,w:0,type:s.locType};
-    byV[s.location].n++;byV[s.location].h+=s.hours;byV[s.location].p+=s.profit;
-    if(s.profit>0)byV[s.location].w++;
-  });
-  const topV=Object.entries(byV).sort((a,b)=>b[1].p-a[1].p).slice(0,12)
-    .map(([n,v])=>`${n}(${v.type}): $${Math.round(v.p)}, ${v.n}sess, $${v.h?Math.round(v.p/v.h):0}/hr, ${Math.round(v.w/v.n*100)}%WR`).join('\n');
-  const byMo={};
-  FILTERED.forEach(s=>{const k=s.date.getFullYear()+'-'+String(s.date.getMonth()+1).padStart(2,'0');byMo[k]=(byMo[k]||0)+s.profit;});
-  const mo=Object.entries(byMo).sort().slice(-12).map(([k,v])=>`${k}:$${Math.round(v)}`).join(', ');
-  const byType={};
-  FILTERED.forEach(s=>{if(!byType[s.locType])byType[s.locType]={n:0,h:0,p:0};byType[s.locType].n++;byType[s.locType].h+=s.hours;byType[s.locType].p+=s.profit;});
-  const typeStr=Object.entries(byType).map(([t,v])=>`${t}: $${Math.round(v.p)}, ${v.n}sess, $${v.h?Math.round(v.p/v.h):0}/hr`).join('\n');
-  const byStake={};
-  FILTERED.forEach(s=>{const k=s.stake||'?';if(!byStake[k])byStake[k]={n:0,h:0,p:0};byStake[k].n++;byStake[k].h+=s.hours;byStake[k].p+=s.profit;});
-  const stakeStr=Object.entries(byStake).sort((a,b)=>b[1].p-a[1].p).slice(0,10).map(([k,v])=>`${k}: $${Math.round(v.p)}, ${v.n}sess, $${v.h?Math.round(v.p/v.h):0}/hr`).join('\n');
-  return {s, topV, mo, typeStr, stakeStr};
-}
-
-function buildPatternData(){
-  // By weekday
-  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const byDay={};
-  days.forEach(d=>byDay[d]={n:0,h:0,p:0,w:0});
-  FILTERED.forEach(s=>{
-    const d=days[s.date.getDay()];
-    if(!byDay[d]) byDay[d]={n:0,h:0,p:0,w:0};
-    byDay[d].n++;byDay[d].h+=s.hours;byDay[d].p+=s.profit;
-    if(s.profit>0)byDay[d].w++;
-  });
-  const dayStr=days.map(d=>{const v=byDay[d];return v.n?`${d}: ${v.n}sess, $${Math.round(v.p)}, $${v.h?Math.round(v.p/v.h):0}/hr, ${Math.round(v.w/v.n*100)}%WR`:null;}).filter(Boolean).join('\n');
-
-  // By session length bucket
-  const buckets={'<3hrs':[],'3-6hrs':[],'6-9hrs':[],'9-12hrs':[],'>12hrs':[]};
-  FILTERED.forEach(s=>{
-    if(s.hours<3) buckets['<3hrs'].push(s);
-    else if(s.hours<6) buckets['3-6hrs'].push(s);
-    else if(s.hours<9) buckets['6-9hrs'].push(s);
-    else if(s.hours<12) buckets['9-12hrs'].push(s);
-    else buckets['>12hrs'].push(s);
-  });
-  const lenStr=Object.entries(buckets).map(([k,arr])=>{
-    if(!arr.length) return null;
-    const p=arr.reduce((a,s)=>a+s.profit,0);
-    const h=arr.reduce((a,s)=>a+s.hours,0);
-    const w=arr.filter(s=>s.profit>0).length;
-    return `${k}: ${arr.length}sess, $${Math.round(p)}, $${h?Math.round(p/h):0}/hr, ${Math.round(w/arr.length*100)}%WR`;
-  }).filter(Boolean).join('\n');
-
-  // Rolling 30-session win rate
-  const last30=[...FILTERED].slice(-30);
-  const prev30=[...FILTERED].slice(-60,-30);
-  const l30wr=last30.length?last30.filter(s=>s.profit>0).length/last30.length*100:0;
-  const p30wr=prev30.length?prev30.filter(s=>s.profit>0).length/prev30.length*100:0;
-  const l30hr=last30.length?last30.reduce((a,s)=>a+s.profit,0)/Math.max(1,last30.reduce((a,s)=>a+s.hours,0)):0;
-  const p30hr=prev30.length?prev30.reduce((a,s)=>a+s.profit,0)/Math.max(1,prev30.reduce((a,s)=>a+s.hours,0)):0;
-
-  return {dayStr, lenStr, l30wr, p30wr, l30hr, p30hr, last30, prev30};
-}
-
-function buildBankrollData(){
-  const now=new Date();
-  const d30=new Date(now);d30.setDate(d30.getDate()-30);
-  const d90=new Date(now);d90.setDate(d90.getDate()-90);
-
-  const last30=FILTERED.filter(s=>s.date>=d30);
-  const last90=FILTERED.filter(s=>s.date>=d90);
-  const prior60=FILTERED.filter(s=>s.date>=d90&&s.date<d30);
-
-  const p30=last30.reduce((a,s)=>a+s.profit,0);
-  const p90=last90.reduce((a,s)=>a+s.profit,0);
-  const h30=last30.reduce((a,s)=>a+s.hours,0);
-  const h90=last90.reduce((a,s)=>a+s.hours,0);
-  const wr30=last30.length?last30.filter(s=>s.profit>0).length/last30.length*100:0;
-  const wr90=last90.length?last90.filter(s=>s.profit>0).length/last90.length*100:0;
-
-  // Monthly breakdown last 6 months
-  const byMo={};
-  FILTERED.forEach(s=>{
-    if(s.date<d90) return;
-    const k=s.date.getFullYear()+'-'+String(s.date.getMonth()+1).padStart(2,'0');
-    byMo[k]=(byMo[k]||0)+s.profit;
-  });
-  const moStr=Object.entries(byMo).sort().map(([k,v])=>`${k}:$${Math.round(v)}`).join(', ');
-
-  // Downswing detection: longest consecutive losing sessions
-  let maxLoss=0,curLoss=0,maxLossAmt=0,curLossAmt=0;
-  FILTERED.forEach(s=>{
-    if(s.profit<0){curLoss++;curLossAmt+=s.profit;if(curLoss>maxLoss){maxLoss=curLoss;maxLossAmt=curLossAmt;}}
-    else{curLoss=0;curLossAmt=0;}
-  });
-
-  return {p30,p90,h30,h90,wr30,wr90,moStr,maxLoss,maxLossAmt,last30n:last30.length,last90n:last90.length};
-}
-
-function buildPrompt(type){
-  const {s,topV,mo,typeStr,stakeStr}=buildCoreSummary();
-  const baseData=`PLAYER DATA (${s.n} sessions filtered)
-Overall: $${Math.round(s.profit)} profit, $${s.hr.toFixed(2)}/hr, ${s.wr.toFixed(1)}% WR, ${Math.round(s.hours)} hours
-
-TOP VENUES:\n${topV}
-BY TYPE:\n${typeStr}
-BY STAKE:\n${stakeStr}
-MONTHLY (last 12):\n${mo}`;
-
-  if(type==='general'){
-    return `You are analysing poker performance data for a professional player. Give concise bullet-point insights in exactly 3 sections. Be specific, data-driven, and reference actual numbers.
-
-Format: ALL CAPS section header, then bullet points using "•". 3-4 bullets per section.
-
-Sections:
-1. OVERALL PERFORMANCE SUMMARY
-2. STRENGTHS & WEAKNESSES
-3. VENUE & GAME SELECTION ADVICE
-
-${baseData}`;
-  }
-
-  if(type==='patterns'){
-    const {dayStr,lenStr,l30wr,p30wr,l30hr,p30hr}=buildPatternData();
-    return `You are analysing poker session patterns for a professional player. Identify non-obvious patterns and give actionable insights. Be specific with numbers.
-
-Format: ALL CAPS section header, then bullet points using "•". 3-4 bullets per section.
-
-Sections:
-1. WEEKDAY PATTERNS
-2. SESSION LENGTH PATTERNS
-3. RECENT FORM & TREND ANALYSIS
-
-${baseData}
-
-BY WEEKDAY:\n${dayStr}
-
-BY SESSION LENGTH:\n${lenStr}
-
-RECENT FORM:
-Last 30 sessions: ${l30wr.toFixed(1)}% WR, $${l30hr.toFixed(2)}/hr
-Prior 30 sessions: ${p30wr.toFixed(1)}% WR, $${p30hr.toFixed(2)}/hr`;
-  }
-
-  if(type==='bankroll'){
-    const bankroll=parseFloat(document.getElementById('bankroll-val').value)||0;
-    const {p30,p90,h30,h90,wr30,wr90,moStr,maxLoss,maxLossAmt,last30n,last90n}=buildBankrollData();
-    return `You are a poker bankroll management advisor reviewing a professional player's financial health. Be direct and give specific, actionable advice.
-
-Format: Start with a STATUS line (GREEN, YELLOW, or RED) and one sentence reason. Then 3 ALL CAPS sections with bullet points using "•".
-
-Sections:
-1. BANKROLL ASSESSMENT
-2. RISK FLAGS
-3. RECOMMENDATIONS
-
-BANKROLL DATA:
-Current bankroll: $${bankroll.toLocaleString()}
-Last 30 days: $${Math.round(p30)} profit, ${last30n} sessions, ${h30.toFixed(0)} hours, ${wr30.toFixed(1)}% WR
-Last 90 days: $${Math.round(p90)} profit, ${last90n} sessions, ${h90.toFixed(0)} hours, ${wr90.toFixed(1)}% WR
-Longest losing streak: ${maxLoss} sessions ($${Math.round(maxLossAmt)} loss)
-Monthly P&L last 6 months: ${moStr}
-${baseData}`;
-  }
-
-  if(type==='smart'){
-    const q=document.getElementById('smart-question').value.trim()||'What are my biggest areas for improvement?';
-    return `You are a poker performance analyst. A professional player is asking you a specific question about their game. Answer directly and specifically using their data. Reference actual numbers. Give 3-5 bullet points using "•" after a brief one-sentence answer.
-
-Question: "${q}"
-
-${baseData}
-
-BY WEEKDAY:\n${(()=>{const {dayStr}=buildPatternData();return dayStr;})()}
-BY SESSION LENGTH:\n${(()=>{const {lenStr}=buildPatternData();return lenStr;})()}`;
-  }
-}
-
-async function runAi(){
-  const key=localStorage.getItem('anthropic_key');
-  if(!key){checkApiKey();return;}
-  if(!FILTERED.length){alert('No sessions match current filters');return;}
-  if(currentAiType==='bankroll'&&!document.getElementById('bankroll-val').value){
-    alert('Please enter your current bankroll amount');
-    document.getElementById('bankroll-val').focus();
-    return;
-  }
-
-  const loadMsgs={
-    general:'Analysing your performance...',
-    patterns:'Detecting patterns in your sessions...',
-    bankroll:'Assessing your bankroll health...',
-    smart:'Thinking through your question...'
-  };
-
-  document.getElementById('ai-loading').style.display='block';
-  document.getElementById('ai-load-msg').textContent=loadMsgs[currentAiType]||'Analysing...';
-  document.getElementById('ai-results').style.display='none';
-  document.getElementById('ai-error').style.display='none';
-  document.getElementById('ai-empty').style.display='none';
-  document.getElementById('gen-btn').disabled=true;
-
-  try{
-    const prompt=buildPrompt(currentAiType);
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})
-    });
-    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'API error '+res.status);}
-    const data=await res.json();
-    renderInsights(data.content[0].text, currentAiType);
-  }catch(e){
-    document.getElementById('ai-error').style.display='block';
-    document.getElementById('ai-error').textContent='Error: '+e.message+(e.message.includes('401')?' — check your API key':'');
-    document.getElementById('ai-empty').style.display='block';
-  }finally{
-    document.getElementById('ai-loading').style.display='none';
-    document.getElementById('gen-btn').disabled=false;
-  }
-}
-
-function renderInsights(text, type){
-  const colors=[G,B,Au,'#c084fc'];
-  const el=document.getElementById('ai-results');
-
-  // Bankroll special rendering with traffic light
-  if(type==='bankroll'){
-    const statusMatch=text.match(/^(GREEN|YELLOW|RED)[:\s-]+(.*)/im);
-    let statusHtml='';
-    if(statusMatch){
-      const status=statusMatch[1].toUpperCase();
-      const reason=statusMatch[2].trim();
-      const statusColors={GREEN:G,YELLOW:Au,RED:R};
-      const col=statusColors[status]||G;
-      statusHtml=`<div class="bk-status" style="background:rgba(${status==='GREEN'?'74,222,128':status==='YELLOW'?'251,191,36':'248,113,113'},.08);border:1px solid ${col};margin-bottom:16px">
-        <div class="bk-light" style="background:${col};box-shadow:0 0 8px ${col}"></div>
-        <div><span style="font-family:var(--mono);font-size:11px;font-weight:500;color:${col}">${status}</span><span style="font-size:13px;color:var(--text2);margin-left:10px">${reason}</span></div>
-      </div>`;
-      text=text.replace(statusMatch[0],'').trim();
-    }
-    el.innerHTML=statusHtml+parseAndRenderSections(text,colors);
-  } else {
-    el.innerHTML=parseAndRenderSections(text,colors);
-  }
-
-  el.style.display='block';
-  document.getElementById('ai-empty').style.display='none';
-}
-
-function parseAndRenderSections(text,colors){
-  const lines=text.split('\n');
-  const parsed=[];let current=null;
-  for(const line of lines){
-    const t=line.trim();
-    if(!t) continue;
-    if(t===t.toUpperCase()&&t.replace(/[^A-Z\s]/g,'').length>3&&!t.startsWith('•')){
-      if(current) parsed.push(current);
-      current={title:t,bullets:[]};
-    } else if((t.startsWith('•')||t.startsWith('-'))&&current){
-      current.bullets.push(t.replace(/^[•\-]\s*/,'').trim());
-    } else if(current&&t&&!t.match(/^\d+\.\s/)){
-      if(current.bullets.length) current.bullets[current.bullets.length-1]+=' '+t;
-      else current.bullets.push(t);
-    }
-  }
-  if(current) parsed.push(current);
-
-  if(!parsed.length) return `<div class="ai-card"><div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap">${text}</div></div>`;
-
-  return `<div style="display:grid;grid-template-columns:repeat(${Math.min(parsed.length,3)},1fr);gap:12px">
-    ${parsed.map((sec,i)=>`
-      <div class="ai-card" style="border-top:2px solid ${colors[i%colors.length]}">
-        <div class="ai-sec-title" style="color:${colors[i%colors.length]}">${sec.title}</div>
-        ${sec.bullets.map(b=>`<div class="ai-bullet"><span style="color:${colors[i%colors.length]};flex-shrink:0;margin-top:2px">•</span><span>${b}</span></div>`).join('')}
-      </div>`).join('')}
-  </div>`;
 }
 
 </script>
