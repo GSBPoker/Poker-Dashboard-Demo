@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker Performance Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f0e;--bg2:#131614;--bg3:#191c1a;--bg4:#1e2420;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8ede9;--text2:#8a9b8d;--text3:#4e6054;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--gold:#fbbf24;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;--r:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* PASSWORD */
+#pw-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:200}
+.pw-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:32px 36px;width:320px;text-align:center}
+.pw-title{font-size:20px;font-weight:500;margin-bottom:6px}
+.pw-sub{font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:20px;letter-spacing:.04em}
+.pw-input{width:100%;font-family:var(--mono);font-size:16px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:10px 14px;margin-bottom:12px;outline:none;text-align:center;letter-spacing:.2em}
+.pw-input:focus{border-color:var(--green)}
+.pw-btn{width:100%;font-family:var(--mono);font-size:11px;padding:11px;background:transparent;border:1px solid var(--green);border-radius:6px;color:var(--green);cursor:pointer;letter-spacing:.06em;transition:all .15s}
+.pw-btn:hover{background:rgba(74,222,128,.08)}
+.pw-err{font-family:var(--mono);font-size:10px;color:var(--red);margin-top:8px;display:none}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:100}
+.spin{width:30px;height:30px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.06em}
+#err-box{display:none;background:rgba(248,113,113,.1);border:1px solid var(--red);border-radius:var(--r);padding:16px 24px;font-family:var(--mono);font-size:11px;color:var(--red);max-width:460px;text-align:center;line-height:1.7}
+
+/* APP */
+#app{display:none}
+
+/* HEADER */
+.hdr{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px}
+.hdr-title{font-size:17px;font-weight:500;letter-spacing:-.02em}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.live-dot{font-family:var(--mono);font-size:10px;padding:3px 10px;border:1px solid var(--green);border-radius:20px;color:var(--green);letter-spacing:.05em}
+.refresh-btn{font-family:var(--mono);font-size:10px;padding:3px 12px;border:1px solid var(--border2);border-radius:20px;background:transparent;color:var(--text2);cursor:pointer;letter-spacing:.04em;transition:all .15s}
+.refresh-btn:hover{border-color:var(--green);color:var(--green)}
+#updated{font-family:var(--mono);font-size:10px;color:var(--text3)}
+
+/* FILTERS */
+.filters{padding:10px 28px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fl{font-family:var(--mono);font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
+.date-wrap{display:flex;gap:6px;align-items:center}
+input[type=date]{font-family:var(--mono);font-size:11px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;cursor:pointer;outline:none;width:130px}
+input[type=date]:focus{border-color:var(--green)}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.4)}
+.date-sep{font-family:var(--mono);font-size:10px;color:var(--text3)}
+
+/* MULTI-SELECT DROPDOWNS */
+.ms-wrap{position:relative}
+.ms-btn{font-family:var(--mono);font-size:11px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:5px 28px 5px 10px;cursor:pointer;min-width:140px;text-align:left;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-btn::after{content:'▾';position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:10px}
+.ms-btn.has-val{border-color:var(--green);color:var(--green)}
+.ms-dropdown{position:absolute;top:100%;left:0;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;z-index:50;min-width:200px;max-height:260px;overflow-y:auto;margin-top:3px;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.ms-dropdown.open{display:block}
+.ms-search{width:100%;font-family:var(--mono);font-size:11px;background:var(--bg3);color:var(--text);border:none;border-bottom:1px solid var(--border);padding:8px 10px;outline:none}
+.ms-option{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:12px;color:var(--text2);cursor:pointer;transition:background .1s}
+.ms-option:hover{background:var(--bg3)}
+.ms-option input[type=checkbox]{accent-color:var(--green);width:13px;height:13px;cursor:pointer}
+.ms-option.selected{color:var(--text)}
+.ms-clear{font-family:var(--mono);font-size:9px;padding:6px 12px;color:var(--text3);cursor:pointer;border-top:1px solid var(--border);text-align:center}
+.ms-clear:hover{color:var(--red)}
+
+/* Game select */
+select.game-sel{font-family:var(--mono);font-size:11px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:5px 24px 5px 10px;cursor:pointer;min-width:130px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234e6054'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;outline:none}
+select.game-sel:focus{border-color:var(--green)}
+
+.filter-sep{width:1px;height:32px;background:var(--border);margin:0 4px}
+.reset-btn{font-family:var(--mono);font-size:10px;padding:5px 14px;border:1px solid var(--border2);border-radius:6px;background:transparent;color:var(--text3);cursor:pointer;letter-spacing:.04em;transition:all .15s;white-space:nowrap}
+.reset-btn:hover{border-color:var(--red);color:var(--red)}
+#filter-count{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap;align-self:center}
+
+/* NAV */
+.nav{display:flex;padding:0 28px;border-bottom:1px solid var(--border)}
+.nav-btn{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:12px 14px;color:var(--text3);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;transition:color .15s,border-color .15s}
+.nav-btn:hover{color:var(--text2)}
+.nav-btn.active{color:var(--green);border-bottom-color:var(--green)}
+
+/* MAIN */
+.main{padding:20px 28px}
+.sec{display:none}.sec.active{display:block}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden}
+.metric::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;opacity:.6}
+.metric.m-green::after{background:var(--green)}
+.metric.m-blue::after{background:var(--blue)}
+.metric.m-gold::after{background:var(--gold)}
+.m-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.m-val{font-family:var(--mono);font-size:26px;font-weight:500;line-height:1}
+.m-val.green{color:var(--green)}.m-val.red{color:var(--red)}.m-val.blue{color:var(--blue)}.m-val.gold{color:var(--gold)}
+.m-sub{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:12px}
+.g2w{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.card-title{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:14px}
+.ch{position:relative}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border2);white-space:nowrap;font-weight:400;cursor:pointer;user-select:none;transition:color .15s}
+th:hover{color:var(--text2)}
+th.sort-asc::after{content:' ↑'}
+th.sort-desc::after{content:' ↓'}
+th.r,td.r{text-align:right}
+td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text2);font-size:12px;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+td.name{color:var(--text)}
+.pos{color:var(--green);font-family:var(--mono)}
+.neg{color:var(--red);font-family:var(--mono)}
+.mono{font-family:var(--mono)}
+
+/* BADGE */
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:4px}
+.b-hg{background:rgba(74,222,128,.1);color:#4ade80}
+.b-ca{background:rgba(96,165,250,.1);color:#60a5fa}
+.b-cl{background:rgba(251,191,36,.1);color:#fbbf24}
+.b-on{background:rgba(148,163,184,.1);color:#94a3b8}
+
+/* BAR ROW */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-lbl{font-size:11px;color:var(--text2);min-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px}
+.bar-val{font-family:var(--mono);font-size:11px;min-width:68px;text-align:right}
+
+.no-data{text-align:center;padding:40px;font-family:var(--mono);font-size:11px;color:var(--text3)}
+
+/* AI */
+.ai-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.ai-sec-title{font-family:var(--mono);font-size:9px;letter-spacing:.08em;margin-bottom:14px}
+.ai-bullet{display:flex;gap:10px;margin-bottom:10px;font-size:13px;color:var(--text2);line-height:1.6}
+
+.ai-type-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center}
+.ai-type-card:hover{border-color:var(--border2);background:var(--bg3)}
+.ai-type-card.active{border-color:var(--green);background:rgba(74,222,128,0.05)}
+.ai-type-icon{font-size:22px;margin-bottom:8px}
+.ai-type-label{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text);letter-spacing:.04em;margin-bottom:6px;text-transform:uppercase}
+.ai-type-sub{font-size:11px;color:var(--text3);line-height:1.5}
+.smart-sugg{font-family:var(--mono);font-size:10px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text3);cursor:pointer;transition:all .15s}
+.smart-sugg:hover{border-color:var(--green);color:var(--green)}
+.bk-status{display:flex;align-items:center;gap:12px;padding:16px 20px;border-radius:var(--r);margin-bottom:14px}
+.bk-light{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- Demo mode: no password required -->
+
+<div id="loading">
+  <div class="spin"></div>
+  <div class="load-txt" id="load-status">Loading session data...</div>
+  <div id="err-box"></div>
+</div>
+
+<div id="app">
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">♠ Poker Performance Dashboard <span style="font-family:var(--mono);font-size:10px;color:var(--text3);font-weight:400;margin-left:8px">DEMO</span></div>
+    </div>
+    <div class="hdr-right">
+      <span id="updated"></span>
+      <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+      <span class="live-dot" style="border-color:var(--gold);color:var(--gold)">● DEMO</span>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <!-- DATE -->
+    <div class="fg">
+      <div class="fl">Date range</div>
+      <div class="date-wrap">
+        <input type="date" id="f-start" onchange="applyFilters()">
+        <span class="date-sep">→</span>
+        <input type="date" id="f-end" onchange="applyFilters()">
+      </div>
+    </div>
+
+    <div class="filter-sep"></div>
+
+    <!-- COUNTRY -->
+    <div class="fg">
+      <div class="fl">Country</div>
+      <div class="ms-wrap" id="wrap-country">
+        <button class="ms-btn" id="btn-country" onclick="toggleMs('country')">All countries</button>
+        <div class="ms-dropdown" id="dd-country">
+          <input class="ms-search" placeholder="Search..." oninput="searchMs('country',this.value)">
+          <div id="opts-country"></div>
+          <div class="ms-clear" onclick="clearMs('country')">Clear selection</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CITY -->
+    <div class="fg">
+      <div class="fl">City</div>
+      <div class="ms-wrap" id="wrap-city">
+        <button class="ms-btn" id="btn-city" onclick="toggleMs('city')">All cities</button>
+        <div class="ms-dropdown" id="dd-city">
+          <input class="ms-search" placeholder="Search..." oninput="searchMs('city',this.value)">
+          <div id="opts-city"></div>
+          <div class="ms-clear" onclick="clearMs('city')">Clear selection</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENUE TYPE -->
+    <div class="fg">
+      <div class="fl">Venue type</div>
+      <div class="ms-wrap" id="wrap-type">
+        <button class="ms-btn" id="btn-type" onclick="toggleMs('type')">All types</button>
+        <div class="ms-dropdown" id="dd-type">
+          <div id="opts-type"></div>
+          <div class="ms-clear" onclick="clearMs('type')">Clear selection</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENUE -->
+    <div class="fg">
+      <div class="fl">Venue</div>
+      <div class="ms-wrap" id="wrap-venue">
+        <button class="ms-btn" id="btn-venue" onclick="toggleMs('venue')">All venues</button>
+        <div class="ms-dropdown" id="dd-venue">
+          <input class="ms-search" placeholder="Search..." oninput="searchMs('venue',this.value)">
+          <div id="opts-venue"></div>
+          <div class="ms-clear" onclick="clearMs('venue')">Clear selection</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-sep"></div>
+
+    <!-- GAME / STAKE -->
+    <div class="fg">
+      <div class="fl">Game (stake)</div>
+      <select class="game-sel" id="f-stake" onchange="applyFilters()">
+        <option value="">All stakes</option>
+      </select>
+    </div>
+
+    <div class="filter-sep"></div>
+    <button class="reset-btn" onclick="resetFilters()">✕ Reset</button>
+    <span id="filter-count"></span>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <button class="nav-btn active" onclick="showTab('overview',this)">Overview</button>
+    <button class="nav-btn" onclick="showTab('venues',this)">Venues</button>
+    <button class="nav-btn" onclick="showTab('geo',this)">Geography</button>
+    <button class="nav-btn" onclick="showTab('stakes',this)">Stakes</button>
+    <button class="nav-btn" onclick="showTab('sessions',this)">Sessions</button>
+    <button class="nav-btn" onclick="showTab('ai',this)">AI Insights</button>
+  </div>
+
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div id="tab-overview" class="sec active">
+      <div class="metrics" id="kpi-row"></div>
+      <div class="g2">
+        <div class="card"><div class="card-title">Cumulative profit</div><div class="ch" style="height:230px"><canvas id="cumChart"></canvas></div></div>
+        <div class="card"><div class="card-title">Monthly P&L — last 12 months</div><div class="ch" style="height:230px"><canvas id="moChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- VENUES -->
+    <div id="tab-venues" class="sec">
+      <div class="g2" style="margin-bottom:14px">
+        <div class="card"><div class="card-title">Top venues — profit</div><div id="venProfBars"></div></div>
+        <div class="card"><div class="card-title">Top venues — $/hr (min 5 sessions)</div><div id="venHrBars"></div></div>
+      </div>
+      <div class="card" style="padding:0">
+        <div style="padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between">
+          <div class="card-title" style="margin:0">All venues — click column header to sort</div>
+        </div>
+        <div class="tbl-wrap"><table id="venTable"></table></div>
+      </div>
+    </div>
+
+    <!-- GEO -->
+    <div id="tab-geo" class="sec">
+      <div class="card" style="padding:0;margin-bottom:12px">
+        <div style="padding:14px 16px 0"><div class="card-title" style="margin:0">Performance by geography</div></div>
+        <div class="tbl-wrap"><table id="geoTable"></table></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="card-title">Hourly rate by market</div><div id="geoHrBars"></div></div>
+        <div class="card"><div class="card-title">Total profit by market</div><div class="ch" style="height:230px"><canvas id="geoChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- STAKES -->
+    <div id="tab-stakes" class="sec">
+      <div class="card" style="padding:0;margin-bottom:14px">
+        <div style="padding:14px 16px 0"><div class="card-title" style="margin:0">Performance by stake</div></div>
+        <div class="tbl-wrap"><table id="stakesTable"></table></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-title">Biggest wins by stake</div>
+          <div class="tbl-wrap"><table id="stakeWinsTable"></table></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Biggest losses by stake</div>
+          <div class="tbl-wrap"><table id="stakeLossTable"></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SESSIONS -->
+    <div id="tab-sessions" class="sec">
+      <div class="g2" style="margin-bottom:14px">
+        <div class="card"><div class="card-title">Top 10 sessions</div><div class="tbl-wrap"><table id="topSess"></table></div></div>
+        <div class="card"><div class="card-title">Bottom 10 sessions</div><div class="tbl-wrap"><table id="botSess"></table></div></div>
+      </div>
+      <div class="card" style="padding:0">
+        <div style="padding:14px 16px 0"><div class="card-title" style="margin:0">All sessions <span id="sess-count" style="color:var(--text3)"></span></div></div>
+        <div class="tbl-wrap" style="max-height:500px;overflow-y:auto"><table id="allSess"></table></div>
+      </div>
+    </div>
+
+    <!-- AI INSIGHTS -->
+    <div id="tab-ai" class="sec">
+      <div id="ai-key-prompt" style="display:none">
+        <div class="card" style="max-width:460px;margin:40px auto">
+          <div class="card-title">API key required</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">Enter your Anthropic API key. Stored only in your browser — never in any code or server.</p>
+          <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="width:100%;font-family:var(--mono);font-size:12px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;margin-bottom:12px;outline:none">
+          <button onclick="saveApiKey()" style="width:100%;font-family:var(--mono);font-size:11px;padding:10px;background:transparent;border:1px solid var(--green);border-radius:6px;color:var(--green);cursor:pointer;letter-spacing:.05em">Save key & continue</button>
+          <p style="font-size:10px;color:var(--text3);margin-top:10px;text-align:center">Get a key at console.anthropic.com</p>
+        </div>
+      </div>
+      <div id="ai-main" style="display:none">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div>
+            <div style="font-size:15px;font-weight:500">AI Insights</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px">Powered by Claude · Select an analysis type below</div>
+          </div>
+          <button onclick="clearApiKey()" style="font-family:var(--mono);font-size:10px;padding:6px 14px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text3);cursor:pointer">Change key</button>
+        </div>
+
+        <!-- Analysis type selector -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+          <div class="ai-type-card active" id="atype-general" onclick="selectAiType('general')">
+            <div class="ai-type-icon">📊</div>
+            <div class="ai-type-label">General Analysis</div>
+            <div class="ai-type-sub">Performance summary, strengths & venue advice</div>
+          </div>
+          <div class="ai-type-card" id="atype-patterns" onclick="selectAiType('patterns')">
+            <div class="ai-type-icon">🔍</div>
+            <div class="ai-type-label">Pattern Detection</div>
+            <div class="ai-type-sub">Weekday, session length & streak patterns</div>
+          </div>
+          <div class="ai-type-card" id="atype-bankroll" onclick="selectAiType('bankroll')">
+            <div class="ai-type-icon">💰</div>
+            <div class="ai-type-label">Bankroll Health</div>
+            <div class="ai-type-sub">30-day vs 90-day trend with traffic light</div>
+          </div>
+          <div class="ai-type-card" id="atype-smart" onclick="selectAiType('smart')">
+            <div class="ai-type-icon">🎯</div>
+            <div class="ai-type-label">Smart Analysis</div>
+            <div class="ai-type-sub">Ask a specific question about your game</div>
+          </div>
+        </div>
+
+        <!-- Bankroll input (only shown for bankroll type) -->
+        <div id="bankroll-input-wrap" style="display:none;margin-bottom:16px">
+          <div class="card" style="display:flex;align-items:center;gap:14px;padding:14px 18px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Current bankroll</div>
+            <div style="display:flex;align-items:center;gap:6px;flex:1">
+              <span style="font-family:var(--mono);font-size:14px;color:var(--text2)">$</span>
+              <input type="number" id="bankroll-val" placeholder="50000" style="font-family:var(--mono);font-size:14px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;outline:none;width:160px" oninput="saveBankroll()">
+            </div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3)">Stored in your browser</div>
+          </div>
+        </div>
+
+        <!-- Smart analysis input -->
+        <div id="smart-input-wrap" style="display:none;margin-bottom:16px">
+          <div class="card" style="padding:14px 18px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Your question</div>
+            <div style="display:flex;gap:10px">
+              <input type="text" id="smart-question" placeholder="e.g. Why is my win rate lower on weekends? Am I better at high stakes or low stakes?" style="flex:1;font-family:var(--mono);font-size:12px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;outline:none" onkeydown="if(event.key==='Enter')runAi()">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+              <button class="smart-sugg" onclick="setQ(this)">Why is my hourly rate declining?</button>
+              <button class="smart-sugg" onclick="setQ(this)">Which stakes are most profitable per hour?</button>
+              <button class="smart-sugg" onclick="setQ(this)">How do I perform after a big loss?</button>
+              <button class="smart-sugg" onclick="setQ(this)">What is my best day of the week to play?</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generate button -->
+        <div style="margin-bottom:20px">
+          <button onclick="runAi()" id="gen-btn" style="font-family:var(--mono);font-size:11px;padding:9px 28px;background:transparent;border:1px solid var(--green);border-radius:6px;color:var(--green);cursor:pointer;letter-spacing:.05em">✦ Generate</button>
+        </div>
+
+        <div id="ai-loading" style="display:none;text-align:center;padding:48px">
+          <div class="spin" style="margin:0 auto 12px"></div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text3)" id="ai-load-msg">Analysing your sessions...</div>
+        </div>
+        <div id="ai-error" style="display:none;background:rgba(248,113,113,.1);border:1px solid var(--red);border-radius:var(--r);padding:14px;font-family:var(--mono);font-size:11px;color:var(--red);line-height:1.7;margin-bottom:12px"></div>
+        <div id="ai-results" style="display:none"></div>
+        <div id="ai-empty" style="text-align:center;padding:48px;font-family:var(--mono);font-size:11px;color:var(--text3)">Select an analysis type above and click Generate</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── DEMO MODE: no password ────────────────────────────────────────────────────
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const DEMO_CSV = `SessionID,StartDate,StartTime,EndDate,EndTime,Weekday,Hours,SmallBlind,BigBlind,Straddle,Ante,Stake,LimitType,Location,LocationType,City,State,Country,BuyIn,CashedOut,Profit,ProfitPerHr,BB,BBPerHr
+1,6/2/2022,11:00 PM,6/2/2022,4:00 AM,Thursday,5.9,1,2,,,1/2,No Limit,Wynn,Casino,Las Vegas,NV,USA,200,901,701,118.81,71.0,12.03
+2,6/7/2022,9:15 PM,6/7/2022,1:15 AM,Tuesday,4.1,5,10,,,5/10,No Limit,Aria,Casino,Las Vegas,NV,USA,800,763,-37,-9.02,-59.7,-14.56
+3,6/14/2022,10:00 PM,6/14/2022,2:00 AM,Tuesday,4.1,5,5,10,,5/5/10,No Limit,Parx Casino,Casino,Bensalem,PA,USA,1900,2383,483,117.8,-15.2,-3.71
+4,6/15/2022,7:15 PM,6/15/2022,6:15 AM,Wednesday,11.7,10,20,,,10/20,No Limit,Aria,Casino,Las Vegas,NV,USA,1000,2965,1965,167.95,70.3,6.01
+5,6/24/2022,9:30 PM,6/24/2022,7:30 AM,Friday,10.6,0.5,1,,,0.5/1,No Limit,Parx Casino,Casino,Bensalem,PA,USA,0,1305,1305,123.11,746.0,70.38
+6,7/10/2022,10:45 PM,7/10/2022,3:45 AM,Sunday,5.9,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,100,1108,1008,170.85,449.0,76.1
+7,7/14/2022,6:00 PM,7/14/2022,5:00 AM,Thursday,11.7,5,5,10,,5/5/10,No Limit,Wynn,Casino,Las Vegas,NV,USA,1100,1782,682,58.29,24.6,2.1
+8,7/22/2022,6:15 PM,7/22/2022,9:15 PM,Friday,3.2,10,20,,,10/20,No Limit,Bay 101,Casino,San Jose,CA,USA,4300,4754,454,141.88,-5.25,-1.64
+9,7/25/2022,6:00 PM,7/25/2022,11:00 PM,Monday,5.7,1,3,,,1/3,No Limit,Aria,Casino,Las Vegas,NV,USA,200,1039,839,147.19,93.33,16.37
+10,8/1/2022,7:30 PM,8/1/2022,2:30 AM,Monday,7.0,10,25,,,10/25,No Limit,Parx Casino,Casino,Bensalem,PA,USA,4600,5116,516,73.71,-1.72,-0.25
+11,8/4/2022,6:00 PM,8/4/2022,2:00 AM,Thursday,8.6,1,2,,,1/2,No Limit,Venetian,Casino,Las Vegas,NV,USA,100,691,591,68.72,16.0,1.86
+12,8/5/2022,8:15 PM,8/5/2022,10:15 PM,Friday,2.3,10,25,,,10/25,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,1600,3689,2089,908.26,61.2,26.61
+13,8/28/2022,10:00 PM,8/28/2022,3:00 AM,Sunday,5.4,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,0,568,568,105.19,9.0,1.67
+14,9/2/2022,7:30 PM,9/2/2022,6:30 AM,Friday,11.3,5,5,10,,5/5/10,No Limit,TCH Social,Club,Dallas,TX,USA,1400,1580,180,15.93,-75.8,-6.71
+15,9/5/2022,11:30 PM,9/5/2022,2:30 AM,Monday,3.1,1,3,,,1/3,No Limit,Wynn,Casino,Las Vegas,NV,USA,500,1111,611,197.1,17.33,5.59
+16,9/23/2022,8:00 PM,9/23/2022,10:00 PM,Friday,2.5,5,5,10,,5/5/10,No Limit,Foxwood,Casino,Mashantucket,CT,USA,600,1393,793,317.2,46.8,18.72
+17,9/27/2022,6:00 PM,9/27/2022,9:00 PM,Tuesday,3.2,2,5,,,2/5,No Limit,Aria,Casino,Las Vegas,NV,USA,700,1266,566,176.88,1.4,0.44
+18,9/29/2022,10:15 PM,9/29/2022,11:15 PM,Thursday,1.9,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,200,742,542,285.26,-17.0,-8.95
+19,10/9/2022,8:15 PM,10/9/2022,1:15 AM,Sunday,5.3,1,2,,,1/2,No Limit,Parx Casino,Casino,Bensalem,PA,USA,300,1270,970,183.02,205.5,38.77
+20,10/10/2022,9:15 PM,10/10/2022,2:15 AM,Monday,5.2,5,10,,,5/10,No Limit,Texas Card House,Club,Dallas,TX,USA,800,1526,726,139.62,16.7,3.21
+21,10/14/2022,11:30 PM,10/14/2022,10:30 AM,Friday,11.8,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,0,1286,1286,108.98,727.0,61.61
+22,10/17/2022,8:15 PM,10/17/2022,6:15 AM,Monday,10.6,2,5,10,,2/5/10,No Limit,Hippodrome,Club,London,,UK,1500,2676,1176,110.94,123.4,11.64
+23,10/20/2022,9:30 PM,10/20/2022,7:30 AM,Thursday,10.7,1,2,,,1/2,No Limit,Hippodrome,Club,London,,UK,400,1689,1289,120.47,365.0,34.11
+24,10/21/2022,8:30 PM,10/21/2022,9:30 PM,Friday,1.7,2,5,10,,2/5/10,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,800,1721,921,541.76,72.4,42.59
+25,10/24/2022,6:00 PM,10/24/2022,2:00 AM,Monday,8.2,2,5,,,2/5,No Limit,Brooklyn Social,House Game,New York City,NY,USA,800,1769,969,118.17,82.0,10.0
+26,10/25/2022,6:00 PM,10/25/2022,1:00 AM,Tuesday,7.6,2,5,,,2/5,No Limit,Brooklyn Social,House Game,New York City,NY,USA,500,1625,1125,148.03,113.2,14.89
+27,11/9/2022,7:30 PM,11/9/2022,1:30 AM,Wednesday,6.1,5,10,,,5/10,No Limit,Bay 101,Casino,San Jose,CA,USA,1500,3178,1678,275.08,111.9,18.34
+28,11/11/2022,11:15 PM,11/11/2022,6:15 AM,Friday,7.0,1,2,,,1/2,No Limit,Aria,Casino,Las Vegas,NV,USA,100,1197,1097,156.71,269.0,38.43
+29,11/23/2022,10:30 PM,11/23/2022,6:30 AM,Wednesday,8.0,1,3,,,1/3,No Limit,Borgata,Casino,Atlantic City,NJ,USA,300,1412,1112,139.0,184.33,23.04
+30,11/26/2022,7:45 PM,11/26/2022,3:45 AM,Saturday,8.8,2,5,,,2/5,No Limit,TCH Social,Club,Dallas,TX,USA,900,2074,1174,133.41,123.0,13.98
+31,12/4/2022,6:30 PM,12/4/2022,3:30 AM,Sunday,9.4,2,5,10,,2/5/10,No Limit,TCH Social,Club,Dallas,TX,USA,1500,1849,349,37.13,-42.0,-4.47
+32,12/7/2022,9:45 PM,12/7/2022,4:45 AM,Wednesday,7.9,1,2,,,1/2,No Limit,Venetian,Casino,Las Vegas,NV,USA,300,921,621,78.61,31.0,3.92
+33,12/9/2022,8:30 PM,12/9/2022,5:30 AM,Friday,9.8,5,5,10,,5/5/10,No Limit,TCH Social,Club,Dallas,TX,USA,2000,3278,1278,130.41,143.8,14.67
+34,12/16/2022,7:00 PM,12/16/2022,11:00 PM,Friday,4.8,2,5,10,,2/5/10,No Limit,Wynn,Casino,Las Vegas,NV,USA,1500,2058,558,116.25,-0.2,-0.04
+35,12/24/2022,7:45 PM,12/24/2022,5:45 AM,Saturday,10.4,0.5,1,,,0.5/1,No Limit,Aria,Casino,Las Vegas,NV,USA,200,578,378,36.35,-181.0,-17.4
+36,12/27/2022,6:45 PM,12/27/2022,2:45 AM,Tuesday,8.4,2,5,10,,2/5/10,No Limit,Foxwood,Casino,Mashantucket,CT,USA,700,1240,540,64.29,-3.8,-0.45
+37,1/4/2023,9:30 PM,1/4/2023,11:30 PM,Wednesday,2.0,10,20,,,10/20,No Limit,Bellagio,Casino,Las Vegas,NV,USA,3900,4981,1081,540.5,26.1,13.05
+38,1/11/2023,9:45 PM,1/11/2023,7:45 AM,Wednesday,10.1,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,200,1422,1222,120.99,663.0,65.64
+39,1/15/2023,10:45 PM,1/15/2023,4:45 AM,Sunday,6.2,1,2,,,1/2,No Limit,Uptown Club,House Game,New York City,NY,USA,200,1136,936,150.97,188.5,30.4
+40,1/16/2023,8:30 PM,1/16/2023,10:30 PM,Monday,2.3,2,5,,,2/5,No Limit,TCH Social,Club,Dallas,TX,USA,1000,1443,443,192.61,-23.2,-10.09
+41,1/21/2023,6:45 PM,1/21/2023,9:45 PM,Saturday,3.0,10,20,,,10/20,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,1500,1636,136,45.33,-21.15,-7.05
+42,2/3/2023,9:45 PM,2/3/2023,2:45 AM,Friday,5.9,10,20,,,10/20,No Limit,Parx Casino,Casino,Bensalem,PA,USA,3900,3288,-612,-103.73,-58.6,-9.93
+43,2/11/2023,8:30 PM,2/11/2023,6:30 AM,Saturday,10.5,5,5,10,,5/5/10,No Limit,Uptown Club,House Game,New York City,NY,USA,500,1637,1137,108.29,115.6,11.01
+44,2/13/2023,10:15 PM,2/13/2023,5:15 AM,Monday,7.2,1,2,,,1/2,No Limit,Club Montmartre,Club,Paris,,France,200,1150,950,131.94,195.5,27.15
+45,2/18/2023,11:15 PM,2/18/2023,5:15 AM,Saturday,6.6,5,5,10,,5/5/10,No Limit,Foxwood,Casino,Mashantucket,CT,USA,1800,2309,509,77.12,-10.0,-1.52
+46,2/26/2023,10:00 PM,2/26/2023,5:00 AM,Sunday,7.1,1,3,,,1/3,No Limit,Midtown Game,House Game,New York City,NY,USA,500,1374,874,123.1,105.0,14.79
+47,3/11/2023,9:30 PM,3/11/2023,7:30 AM,Saturday,10.6,1,2,,,1/2,No Limit,Aria,Casino,Las Vegas,NV,USA,100,635,535,50.47,-12.0,-1.13
+48,3/13/2023,8:00 PM,3/13/2023,5:00 AM,Monday,9.4,1,2,,,1/2,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,200,1424,1224,130.21,332.5,35.37
+49,3/20/2023,11:00 PM,3/20/2023,11:00 AM,Monday,12.0,10,20,,,10/20,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,1300,1221,-79,-6.58,-31.95,-2.66
+50,4/10/2023,7:15 PM,4/10/2023,5:15 AM,Monday,10.3,1,3,,,1/3,No Limit,Club Montmartre,Club,Paris,,France,200,1024,824,80.0,88.33,8.58
+51,4/15/2023,10:00 PM,4/15/2023,9:00 AM,Saturday,11.5,1,3,,,1/3,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,500,1359,859,74.7,100.0,8.7
+52,4/20/2023,8:45 PM,4/20/2023,10:45 PM,Thursday,2.6,1,3,,,1/3,No Limit,Hippodrome,Club,London,,UK,300,929,629,241.92,23.33,8.97
+53,4/23/2023,8:00 PM,4/23/2023,3:00 AM,Sunday,7.7,2,5,10,,2/5/10,No Limit,Borgata,Casino,Atlantic City,NJ,USA,600,1658,1058,137.4,99.8,12.96
+54,4/24/2023,8:00 PM,4/24/2023,1:00 AM,Monday,5.1,5,5,10,,5/5/10,No Limit,Midtown Game,House Game,New York City,NY,USA,600,1584,984,192.94,85.0,16.67
+55,4/27/2023,11:45 PM,4/27/2023,9:45 AM,Thursday,10.4,5,10,,,5/10,No Limit,Foxwood,Casino,Mashantucket,CT,USA,500,2509,2009,193.17,145.0,13.94
+56,4/30/2023,8:45 PM,4/30/2023,5:45 AM,Sunday,9.2,2,5,10,,2/5/10,No Limit,Texas Card House,Club,Dallas,TX,USA,700,2277,1577,171.41,203.6,22.13
+57,5/1/2023,9:15 PM,5/1/2023,1:15 AM,Monday,4.9,10,25,,,10/25,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,2700,4023,1323,270.0,30.56,6.24
+58,5/5/2023,8:15 PM,5/5/2023,1:15 AM,Friday,5.0,5,5,10,,5/5/10,No Limit,Club Montmartre,Club,Paris,,France,1700,2342,642,128.4,16.6,3.32
+59,5/17/2023,6:15 PM,5/17/2023,11:15 PM,Wednesday,5.1,5,10,,,5/10,No Limit,Foxwood,Casino,Mashantucket,CT,USA,1300,2109,809,158.63,25.0,4.9
+60,6/1/2023,9:45 PM,6/1/2023,4:45 AM,Thursday,7.3,1,2,,,1/2,No Limit,Aria,Casino,Las Vegas,NV,USA,200,727,527,72.19,-16.0,-2.19
+61,6/25/2023,8:45 PM,6/25/2023,12:45 AM,Sunday,4.6,1,2,,,1/2,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,100,758,658,143.04,49.5,10.76
+62,6/29/2023,8:45 PM,6/29/2023,8:45 AM,Thursday,12.0,5,10,,,5/10,No Limit,Hustler,Casino,Gardena,CA,USA,1800,3370,1570,130.83,101.1,8.42
+63,7/13/2023,11:15 PM,7/13/2023,1:15 AM,Thursday,2.8,5,5,10,,5/5/10,No Limit,Venetian,Casino,Las Vegas,NV,USA,1200,1938,738,263.57,35.8,12.79
+64,7/17/2023,10:30 PM,7/17/2023,7:30 AM,Monday,9.1,0.5,1,,,0.5/1,No Limit,Bellagio,Casino,Las Vegas,NV,USA,100,1400,1300,142.86,741.0,81.43
+65,8/4/2023,8:00 PM,8/4/2023,11:00 PM,Friday,3.9,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,100,700,600,153.85,41.0,10.51
+66,8/7/2023,9:00 PM,8/7/2023,8:00 AM,Monday,11.4,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,200,1263,1063,93.25,504.0,44.21
+67,8/8/2023,9:00 PM,8/8/2023,3:00 AM,Tuesday,6.4,5,5,10,,5/5/10,No Limit,Brooklyn Social,House Game,New York City,NY,USA,1400,2139,739,115.47,36.0,5.62
+68,8/10/2023,6:15 PM,8/10/2023,8:15 PM,Thursday,2.3,2,5,10,,2/5/10,No Limit,Midtown Game,House Game,New York City,NY,USA,1200,1917,717,311.74,31.6,13.74
+69,8/13/2023,10:15 PM,8/13/2023,12:15 AM,Sunday,2.4,10,25,,,10/25,No Limit,Wynn,Casino,Las Vegas,NV,USA,2900,2502,-398,-165.83,-38.32,-15.97
+70,8/15/2023,10:45 PM,8/15/2023,9:45 AM,Tuesday,11.0,2,5,10,,2/5/10,No Limit,Hippodrome,Club,London,,UK,1200,1792,592,53.82,6.6,0.6
+71,8/22/2023,7:30 PM,8/22/2023,2:30 AM,Tuesday,7.9,10,25,,,10/25,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,1300,2932,1632,206.58,42.92,5.43
+72,8/24/2023,6:45 PM,8/24/2023,9:45 PM,Thursday,3.3,1,3,,,1/3,No Limit,TCH Social,Club,Dallas,TX,USA,200,691,491,148.79,-22.67,-6.87
+73,8/26/2023,9:00 PM,8/26/2023,1:00 AM,Saturday,4.6,10,25,,,10/25,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,4000,4157,157,34.13,-16.08,-3.5
+74,9/1/2023,11:15 PM,9/1/2023,5:15 AM,Friday,6.0,2,5,,,2/5,No Limit,Texas Card House,Club,Dallas,TX,USA,600,1065,465,77.5,-18.8,-3.13
+75,9/4/2023,8:45 PM,9/4/2023,10:45 PM,Monday,2.1,1,3,,,1/3,No Limit,Uptown Club,House Game,New York City,NY,USA,100,598,498,237.14,-20.33,-9.68
+76,9/10/2023,9:45 PM,9/10/2023,8:45 AM,Sunday,11.4,5,5,10,,5/5/10,No Limit,Wynn,Casino,Las Vegas,NV,USA,1700,2392,692,60.7,26.6,2.33
+77,9/12/2023,11:00 PM,9/12/2023,8:00 AM,Tuesday,9.2,1,2,,,1/2,No Limit,Aria,Casino,Las Vegas,NV,USA,400,1387,987,107.28,214.0,23.26
+78,9/13/2023,9:45 PM,9/13/2023,10:45 PM,Wednesday,1.9,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,200,869,669,352.11,110.0,57.89
+79,9/15/2023,9:30 PM,9/15/2023,3:30 AM,Friday,6.1,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,200,1178,978,160.33,419.0,68.69
+80,9/20/2023,8:45 PM,9/20/2023,1:45 AM,Wednesday,5.0,1,3,,,1/3,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,200,980,780,156.0,73.67,14.73
+81,10/1/2023,9:00 PM,10/1/2023,3:00 AM,Sunday,6.3,5,5,10,,5/5/10,No Limit,Midtown Game,House Game,New York City,NY,USA,600,996,396,62.86,-32.6,-5.17
+82,10/4/2023,8:45 PM,10/4/2023,1:45 AM,Wednesday,5.8,5,5,10,,5/5/10,No Limit,TCH Social,Club,Dallas,TX,USA,1900,2927,1027,177.07,93.6,16.14
+83,10/7/2023,11:45 PM,10/7/2023,2:45 AM,Saturday,3.6,1,2,,,1/2,No Limit,TCH Social,Club,Dallas,TX,USA,100,862,762,211.67,101.5,28.19
+84,10/11/2023,6:45 PM,10/11/2023,3:45 AM,Wednesday,9.0,10,25,,,10/25,No Limit,Wynn,Casino,Las Vegas,NV,USA,2500,2687,187,20.78,-14.88,-1.65
+85,10/15/2023,8:30 PM,10/15/2023,7:30 AM,Sunday,11.4,1,3,,,1/3,No Limit,Wynn,Casino,Las Vegas,NV,USA,400,1628,1228,107.72,223.0,19.56
+86,10/19/2023,9:15 PM,10/19/2023,1:15 AM,Thursday,4.1,0.5,1,,,0.5/1,No Limit,Parx Casino,Casino,Bensalem,PA,USA,100,880,780,190.24,221.0,53.9
+87,10/21/2023,10:30 PM,10/21/2023,2:30 AM,Saturday,4.4,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,0,738,738,167.73,179.0,40.68
+88,10/28/2023,11:45 PM,10/28/2023,9:45 AM,Saturday,10.3,2,5,,,2/5,No Limit,Midtown Game,House Game,New York City,NY,USA,700,1888,1188,115.34,125.8,12.21
+89,11/21/2023,8:15 PM,11/21/2023,2:15 AM,Tuesday,6.6,2,5,10,,2/5/10,No Limit,Brooklyn Social,House Game,New York City,NY,USA,1300,1962,662,100.3,20.6,3.12
+90,11/22/2023,9:00 PM,11/22/2023,2:00 AM,Wednesday,5.5,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,200,1081,881,160.18,322.0,58.55
+91,11/24/2023,11:15 PM,11/24/2023,10:15 AM,Friday,11.1,0.5,1,,,0.5/1,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,200,1031,831,74.86,272.0,24.5
+92,11/25/2023,6:45 PM,11/25/2023,12:45 AM,Saturday,6.8,1,2,,,1/2,No Limit,Foxwood,Casino,Mashantucket,CT,USA,200,1014,814,119.71,127.5,18.75
+93,11/29/2023,9:30 PM,11/29/2023,6:30 AM,Wednesday,9.1,0.5,1,,,0.5/1,No Limit,Wynn,Casino,Las Vegas,NV,USA,0,737,737,80.99,178.0,19.56
+94,12/1/2023,11:45 PM,12/1/2023,1:45 AM,Friday,2.3,1,2,,,1/2,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,300,850,550,239.13,-4.5,-1.96
+95,12/5/2023,7:00 PM,12/5/2023,8:00 PM,Tuesday,1.9,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,200,673,473,248.95,-86.0,-45.26
+96,12/16/2023,6:00 PM,12/16/2023,12:00 AM,Saturday,6.2,1,3,,,1/3,No Limit,Parx Casino,Casino,Bensalem,PA,USA,100,767,667,107.58,36.0,5.81
+97,12/22/2023,11:15 PM,12/22/2023,4:15 AM,Friday,5.3,1,2,,,1/2,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,300,984,684,129.06,62.5,11.79
+98,12/23/2023,7:45 PM,12/23/2023,5:45 AM,Saturday,10.6,1,3,,,1/3,No Limit,Wynn,Casino,Las Vegas,NV,USA,500,1627,1127,106.32,189.33,17.86
+99,1/14/2024,9:30 PM,1/14/2024,3:30 AM,Sunday,6.3,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,0,593,593,94.13,34.0,5.4
+100,1/22/2024,10:30 PM,1/22/2024,4:30 AM,Monday,6.1,1,3,,,1/3,No Limit,TCH Social,Club,Dallas,TX,USA,100,764,664,108.85,35.0,5.74
+101,1/23/2024,6:15 PM,1/23/2024,12:15 AM,Tuesday,6.3,2,5,10,,2/5/10,No Limit,TCH Social,Club,Dallas,TX,USA,900,1915,1015,161.11,91.2,14.48
+102,2/2/2024,11:45 PM,2/2/2024,10:45 AM,Friday,11.9,5,10,,,5/10,No Limit,Borgata,Casino,Atlantic City,NJ,USA,1400,2069,669,56.22,11.0,0.92
+103,2/20/2024,7:30 PM,2/20/2024,6:30 AM,Tuesday,11.1,10,25,,,10/25,No Limit,Venetian,Casino,Las Vegas,NV,USA,1300,3538,2238,201.62,67.16,6.05
+104,2/29/2024,11:15 PM,2/29/2024,3:15 AM,Thursday,4.1,2,5,10,,2/5/10,No Limit,Bellagio,Casino,Las Vegas,NV,USA,1400,1812,412,100.49,-29.4,-7.17
+105,3/6/2024,6:30 PM,3/6/2024,10:30 PM,Wednesday,4.7,5,10,,,5/10,No Limit,TCH Social,Club,Dallas,TX,USA,600,702,102,21.7,-45.7,-9.72
+106,3/8/2024,8:30 PM,3/8/2024,11:30 PM,Friday,3.6,1,2,,,1/2,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,100,808,708,196.67,74.5,20.69
+107,3/25/2024,9:00 PM,3/25/2024,8:00 AM,Monday,11.7,2,5,,,2/5,No Limit,Midtown Game,House Game,New York City,NY,USA,1000,1918,918,78.46,71.8,6.14
+108,3/26/2024,10:30 PM,3/26/2024,7:30 AM,Tuesday,9.1,2,5,10,,2/5/10,No Limit,Wynn,Casino,Las Vegas,NV,USA,1500,2506,1006,110.55,89.4,9.82
+109,4/7/2024,8:45 PM,4/7/2024,12:45 AM,Sunday,4.3,1,2,,,1/2,No Limit,Aria,Casino,Las Vegas,NV,USA,100,559,459,106.74,-50.0,-11.63
+110,4/20/2024,10:30 PM,4/20/2024,6:30 AM,Saturday,8.6,2,5,,,2/5,No Limit,Midtown Game,House Game,New York City,NY,USA,400,1437,1037,120.58,95.6,11.12
+111,4/23/2024,9:00 PM,4/23/2024,11:00 PM,Tuesday,2.2,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,200,925,725,329.55,166.0,75.45
+112,4/27/2024,7:15 PM,4/27/2024,7:15 AM,Saturday,12.0,1,2,,,1/2,No Limit,Wynn,Casino,Las Vegas,NV,USA,300,722,422,35.17,-68.5,-5.71
+113,5/5/2024,9:45 PM,5/5/2024,4:45 AM,Sunday,7.7,5,10,,,5/10,No Limit,Borgata,Casino,Atlantic City,NJ,USA,1800,3203,1403,182.21,84.4,10.96
+114,5/28/2024,9:15 PM,5/28/2024,5:15 AM,Tuesday,8.7,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,0,559,559,64.25,0.0,0.0
+115,6/5/2024,7:00 PM,6/5/2024,2:00 AM,Wednesday,7.2,1,2,,,1/2,No Limit,Brooklyn Social,House Game,New York City,NY,USA,300,1368,1068,148.33,254.5,35.35
+116,6/10/2024,10:00 PM,6/10/2024,6:00 AM,Monday,8.5,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,0,966,966,113.65,407.0,47.88
+117,6/11/2024,10:15 PM,6/11/2024,9:15 AM,Tuesday,11.9,5,10,,,5/10,No Limit,Aria,Casino,Las Vegas,NV,USA,1200,2667,1467,123.28,90.8,7.63
+118,6/13/2024,10:00 PM,6/13/2024,7:00 AM,Thursday,9.6,2,5,10,,2/5/10,No Limit,Bay 101,Casino,San Jose,CA,USA,1000,2486,1486,154.79,185.4,19.31
+119,6/17/2024,7:00 PM,6/17/2024,2:00 AM,Monday,7.2,2,5,,,2/5,No Limit,Venetian,Casino,Las Vegas,NV,USA,500,1799,1299,180.42,148.0,20.56
+120,6/28/2024,6:15 PM,6/28/2024,10:15 PM,Friday,4.9,2,5,10,,2/5/10,No Limit,Borgata,Casino,Atlantic City,NJ,USA,1400,2202,802,163.67,48.6,9.92
+121,7/4/2024,6:45 PM,7/4/2024,3:45 AM,Thursday,9.3,5,5,10,,5/5/10,No Limit,Club One,Club,Fresno,CA,USA,800,1658,858,92.26,59.8,6.43
+122,7/5/2024,11:30 PM,7/5/2024,8:30 AM,Friday,9.1,10,25,,,10/25,No Limit,Foxwood,Casino,Mashantucket,CT,USA,1200,1223,23,2.53,-21.44,-2.36
+123,7/15/2024,11:45 PM,7/15/2024,11:45 AM,Monday,12.0,1,2,,,1/2,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,100,1402,1302,108.5,371.5,30.96
+124,7/17/2024,8:30 PM,7/17/2024,3:30 AM,Wednesday,7.9,1,3,,,1/3,No Limit,Aria,Casino,Las Vegas,NV,USA,300,779,479,60.63,-26.67,-3.38
+125,7/18/2024,6:15 PM,7/18/2024,10:15 PM,Thursday,4.6,10,25,,,10/25,No Limit,Borgata,Casino,Atlantic City,NJ,USA,4300,3393,-907,-197.17,-58.68,-12.76
+126,7/21/2024,9:00 PM,7/21/2024,2:00 AM,Sunday,5.1,2,5,10,,2/5/10,No Limit,Parx Casino,Casino,Bensalem,PA,USA,1100,1939,839,164.51,56.0,10.98
+127,7/28/2024,6:00 PM,7/28/2024,11:00 PM,Sunday,5.4,5,10,,,5/10,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,1300,1965,665,123.15,10.6,1.96
+128,8/19/2024,10:30 PM,8/19/2024,5:30 AM,Monday,7.3,5,10,,,5/10,No Limit,Parx Casino,Casino,Bensalem,PA,USA,900,1672,772,105.75,21.3,2.92
+129,8/26/2024,6:30 PM,8/26/2024,4:30 AM,Monday,10.7,2,5,10,,2/5/10,No Limit,TCH Social,Club,Dallas,TX,USA,1000,1958,958,89.53,79.8,7.46
+130,8/30/2024,11:45 PM,8/30/2024,6:45 AM,Friday,7.6,5,10,,,5/10,No Limit,Bay 101,Casino,San Jose,CA,USA,800,1783,983,129.34,42.4,5.58
+131,9/11/2024,9:00 PM,9/11/2024,7:00 AM,Wednesday,10.4,1,3,,,1/3,No Limit,Bellagio,Casino,Las Vegas,NV,USA,300,1046,746,71.73,62.33,5.99
+132,10/7/2024,8:30 PM,10/7/2024,11:30 PM,Monday,3.4,5,5,10,,5/5/10,No Limit,Bay 101,Casino,San Jose,CA,USA,500,969,469,137.94,-18.0,-5.29
+133,10/12/2024,6:00 PM,10/12/2024,1:00 AM,Saturday,7.4,2,5,,,2/5,No Limit,Borgata,Casino,Atlantic City,NJ,USA,500,1386,886,119.73,65.4,8.84
+134,10/13/2024,8:30 PM,10/13/2024,1:30 AM,Sunday,5.9,1,3,,,1/3,No Limit,Club One,Club,Fresno,CA,USA,400,1174,774,131.19,71.67,12.15
+135,10/14/2024,6:00 PM,10/14/2024,1:00 AM,Monday,7.8,1,2,,,1/2,No Limit,Texas Card House,Club,Dallas,TX,USA,300,1467,1167,149.62,304.0,38.97
+136,10/25/2024,7:00 PM,10/25/2024,2:00 AM,Friday,7.9,1,2,,,1/2,No Limit,Venetian,Casino,Las Vegas,NV,USA,200,1039,839,106.2,140.0,17.72
+137,11/7/2024,7:45 PM,11/7/2024,3:45 AM,Thursday,8.6,1,3,,,1/3,No Limit,Borgata,Casino,Atlantic City,NJ,USA,300,1096,796,92.56,79.0,9.19
+138,11/14/2024,7:30 PM,11/14/2024,10:30 PM,Thursday,3.6,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,0,822,822,228.33,263.0,73.06
+139,12/6/2024,7:30 PM,12/6/2024,1:30 AM,Friday,6.7,1,3,,,1/3,No Limit,Venetian,Casino,Las Vegas,NV,USA,100,915,815,121.64,85.33,12.74
+140,12/11/2024,8:45 PM,12/11/2024,9:45 PM,Wednesday,1.7,1,2,,,1/2,No Limit,Aria,Casino,Las Vegas,NV,USA,400,1153,753,442.94,97.0,57.06
+141,12/15/2024,10:45 PM,12/15/2024,12:45 AM,Sunday,2.7,1,2,,,1/2,No Limit,Hustler,Casino,Gardena,CA,USA,200,646,446,165.19,-56.5,-20.93
+142,12/16/2024,9:45 PM,12/16/2024,3:45 AM,Monday,6.1,2,5,,,2/5,No Limit,Midtown Game,House Game,New York City,NY,USA,400,1222,822,134.75,52.6,8.62
+143,12/26/2024,11:00 PM,12/26/2024,8:00 AM,Thursday,9.3,1,2,,,1/2,No Limit,Resorts World,Casino,New York City,NY,USA,200,785,585,62.9,13.0,1.4
+144,12/27/2024,11:15 PM,12/27/2024,4:15 AM,Friday,5.2,2,5,10,,2/5/10,No Limit,Resorts World,Casino,New York City,NY,USA,1000,1875,875,168.27,63.2,12.15
+145,1/2/2025,7:45 PM,1/2/2025,10:45 PM,Thursday,3.6,2,5,,,2/5,No Limit,Bellagio,Casino,Las Vegas,NV,USA,700,1423,723,200.83,32.8,9.11
+146,1/14/2025,10:30 PM,1/14/2025,4:30 AM,Tuesday,6.2,10,25,,,10/25,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,4700,4252,-448,-72.26,-40.32,-6.5
+147,1/24/2025,8:00 PM,1/24/2025,11:00 PM,Friday,3.1,1,2,,,1/2,No Limit,Brooklyn Social,House Game,New York City,NY,USA,200,655,455,146.77,-52.0,-16.77
+148,1/29/2025,8:30 PM,1/29/2025,2:30 AM,Wednesday,6.3,1,3,,,1/3,No Limit,Borgata,Casino,Atlantic City,NJ,USA,300,793,493,78.25,-22.0,-3.49
+149,2/19/2025,11:00 PM,2/19/2025,6:00 AM,Wednesday,7.7,1,3,,,1/3,No Limit,Aria,Casino,Las Vegas,NV,USA,500,940,440,57.14,-39.67,-5.15
+150,2/20/2025,7:00 PM,2/20/2025,11:00 PM,Thursday,4.9,10,25,,,10/25,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,2200,1694,-506,-103.27,-42.64,-8.7
+151,2/25/2025,9:15 PM,2/25/2025,3:15 AM,Tuesday,6.8,5,10,,,5/10,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,700,1246,546,80.29,-1.3,-0.19
+152,3/7/2025,10:00 PM,3/7/2025,3:00 AM,Friday,5.8,5,5,10,,5/5/10,No Limit,Borgata,Casino,Atlantic City,NJ,USA,1700,2554,854,147.24,59.0,10.17
+153,3/19/2025,11:15 PM,3/19/2025,1:15 AM,Wednesday,2.2,5,10,,,5/10,No Limit,Hippodrome,Club,London,,UK,1500,1894,394,179.09,-16.5,-7.5
+154,3/22/2025,11:45 PM,3/22/2025,10:45 AM,Saturday,11.1,10,25,,,10/25,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,1900,1846,-54,-4.86,-24.56,-2.21
+155,3/31/2025,11:00 PM,3/31/2025,6:00 AM,Monday,7.4,1,3,,,1/3,No Limit,Wynn,Casino,Las Vegas,NV,USA,300,1157,857,115.81,99.33,13.42
+156,4/5/2025,7:15 PM,4/5/2025,12:15 AM,Saturday,5.3,2,5,10,,2/5/10,No Limit,TCH Social,Club,Dallas,TX,USA,1300,2037,737,139.06,35.6,6.72
+157,4/9/2025,6:00 PM,4/9/2025,9:00 PM,Wednesday,3.9,0.5,1,,,0.5/1,No Limit,Borgata,Casino,Atlantic City,NJ,USA,0,603,603,154.62,44.0,11.28
+158,4/18/2025,7:15 PM,4/18/2025,9:15 PM,Friday,2.9,1,2,,,1/2,No Limit,TCH Social,Club,Dallas,TX,USA,300,982,682,235.17,61.5,21.21
+159,4/25/2025,9:30 PM,4/25/2025,6:30 AM,Friday,9.1,5,5,10,,5/5/10,No Limit,Midtown Game,House Game,New York City,NY,USA,1000,1207,207,22.75,-70.4,-7.74
+160,5/16/2025,9:15 PM,5/16/2025,1:15 AM,Friday,4.0,1,2,,,1/2,No Limit,Club Montmartre,Club,Paris,,France,200,871,671,167.75,56.0,14.0
+161,5/19/2025,7:15 PM,5/19/2025,1:15 AM,Monday,6.3,10,25,,,10/25,No Limit,Borgata,Casino,Atlantic City,NJ,USA,3800,3509,-291,-46.19,-34.04,-5.4
+162,5/22/2025,8:00 PM,5/22/2025,10:00 PM,Thursday,2.0,1,3,,,1/3,No Limit,Midtown Game,House Game,New York City,NY,USA,300,1014,714,357.0,51.67,25.83
+163,5/26/2025,7:45 PM,5/26/2025,11:45 PM,Monday,4.5,5,5,10,,5/5/10,No Limit,Texas Card House,Club,Dallas,TX,USA,800,1550,750,166.67,38.2,8.49
+164,5/29/2025,9:00 PM,5/29/2025,7:00 AM,Thursday,10.8,2,5,10,,2/5/10,No Limit,Wynn,Casino,Las Vegas,NV,USA,1200,2978,1778,164.63,243.8,22.57
+165,6/3/2025,6:30 PM,6/3/2025,11:30 PM,Tuesday,5.6,5,10,,,5/10,No Limit,Borgata,Casino,Atlantic City,NJ,USA,1200,1749,549,98.04,-1.0,-0.18
+166,6/4/2025,11:15 PM,6/4/2025,3:15 AM,Wednesday,4.5,1,3,,,1/3,No Limit,Hippodrome,Club,London,,UK,100,1046,946,210.22,129.0,28.67
+167,6/8/2025,7:45 PM,6/8/2025,3:45 AM,Sunday,8.0,2,5,10,,2/5/10,No Limit,Club Montmartre,Club,Paris,,France,1200,2462,1262,157.75,140.6,17.57
+168,6/9/2025,9:45 PM,6/9/2025,1:45 AM,Monday,4.7,5,5,10,,5/5/10,No Limit,Wynn,Casino,Las Vegas,NV,USA,1200,1704,504,107.23,-11.0,-2.34
+169,6/21/2025,8:45 PM,6/21/2025,3:45 AM,Saturday,7.1,0.5,1,,,0.5/1,No Limit,Aria,Casino,Las Vegas,NV,USA,200,1009,809,113.94,250.0,35.21
+170,6/30/2025,11:00 PM,6/30/2025,6:00 AM,Monday,7.5,5,10,,,5/10,No Limit,Aria,Casino,Las Vegas,NV,USA,1200,1460,260,34.67,-29.9,-3.99
+171,7/5/2025,6:45 PM,7/5/2025,5:45 AM,Saturday,11.5,5,10,,,5/10,No Limit,Resorts World,Casino,New York City,NY,USA,700,1763,1063,92.43,50.4,4.38
+172,7/8/2025,6:30 PM,7/8/2025,5:30 AM,Tuesday,11.8,1,2,,,1/2,No Limit,Brooklyn Social,House Game,New York City,NY,USA,400,930,530,44.92,-14.5,-1.23
+173,7/9/2025,8:15 PM,7/9/2025,5:15 AM,Wednesday,9.2,2,5,,,2/5,No Limit,Hippodrome,Club,London,,UK,600,1597,997,108.37,87.6,9.52
+174,7/15/2025,11:45 PM,7/15/2025,9:45 AM,Tuesday,10.0,10,20,,,10/20,No Limit,Aria,Casino,Las Vegas,NV,USA,3100,2343,-757,-75.7,-65.85,-6.58
+175,7/24/2025,6:30 PM,7/24/2025,9:30 PM,Thursday,3.4,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,200,717,517,152.06,-42.0,-12.35
+176,8/5/2025,9:45 PM,8/5/2025,1:45 AM,Tuesday,4.8,2,5,10,,2/5/10,No Limit,Bellagio,Casino,Las Vegas,NV,USA,500,643,143,29.79,-83.2,-17.33
+177,8/13/2025,6:30 PM,8/13/2025,11:30 PM,Wednesday,5.2,2,5,10,,2/5/10,No Limit,Venetian,Casino,Las Vegas,NV,USA,900,1881,981,188.65,84.4,16.23
+178,8/24/2025,8:15 PM,8/24/2025,2:15 AM,Sunday,6.1,1,2,,,1/2,No Limit,Parx Casino,Casino,Bensalem,PA,USA,300,1267,967,158.52,204.0,33.44
+179,8/26/2025,6:45 PM,8/26/2025,5:45 AM,Tuesday,11.2,0.5,1,,,0.5/1,No Limit,Foxwood,Casino,Mashantucket,CT,USA,100,1037,937,83.66,378.0,33.75
+180,9/8/2025,11:30 PM,9/8/2025,3:30 AM,Monday,4.9,2,5,,,2/5,No Limit,Bay 101,Casino,San Jose,CA,USA,700,894,194,39.59,-73.0,-14.9
+181,9/10/2025,8:45 PM,9/10/2025,11:45 PM,Wednesday,3.2,10,25,,,10/25,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,3700,2815,-885,-276.56,-57.8,-18.06
+182,9/17/2025,10:15 PM,9/17/2025,6:15 AM,Wednesday,8.5,1,2,,,1/2,No Limit,Venetian,Casino,Las Vegas,NV,USA,100,876,776,91.29,108.5,12.76
+183,9/18/2025,11:30 PM,9/18/2025,7:30 AM,Thursday,8.6,0.5,1,,,0.5/1,No Limit,Tiny League,Online,New York City,NY,USA,200,984,784,91.16,225.0,26.16
+184,9/19/2025,8:30 PM,9/19/2025,3:30 AM,Friday,7.9,10,25,,,10/25,No Limit,Borgata,Casino,Atlantic City,NJ,USA,1200,2660,1460,184.81,36.04,4.56
+185,9/22/2025,6:00 PM,9/22/2025,8:00 PM,Monday,2.9,1,3,,,1/3,No Limit,Horseshoe Baltimore,Casino,Baltimore,MD,USA,500,1069,569,196.21,3.33,1.15
+186,10/3/2025,8:30 PM,10/3/2025,1:30 AM,Friday,5.6,2,5,10,,2/5/10,No Limit,Club One,Club,Fresno,CA,USA,1300,2210,910,162.5,70.2,12.54
+187,10/4/2025,6:45 PM,10/4/2025,10:45 PM,Saturday,4.5,1,3,,,1/3,No Limit,Texas Card House,Club,Dallas,TX,USA,500,1320,820,182.22,87.0,19.33
+188,10/9/2025,8:30 PM,10/9/2025,6:30 AM,Thursday,10.0,0.5,1,,,0.5/1,No Limit,Bellagio,Casino,Las Vegas,NV,USA,0,1328,1328,132.8,769.0,76.9
+189,10/15/2025,11:15 PM,10/15/2025,9:15 AM,Wednesday,10.9,5,5,10,,5/5/10,No Limit,Texas Card House,Club,Dallas,TX,USA,1400,2560,1160,106.42,120.2,11.03
+190,10/19/2025,7:15 PM,10/19/2025,9:15 PM,Sunday,2.8,5,5,10,,5/5/10,No Limit,Hippodrome,Club,London,,UK,1200,1314,114,40.71,-89.0,-31.79
+191,10/25/2025,10:00 PM,10/25/2025,5:00 AM,Saturday,7.3,1,2,,,1/2,No Limit,Hippodrome,Club,London,,UK,300,1016,716,98.08,78.5,10.75
+192,10/30/2025,9:00 PM,10/30/2025,6:00 AM,Thursday,9.0,1,2,,,1/2,No Limit,Aria,Casino,Las Vegas,NV,USA,300,1057,757,84.11,99.0,11.0
+193,11/18/2025,10:15 PM,11/18/2025,4:15 AM,Tuesday,6.2,5,10,,,5/10,No Limit,Wynn,Casino,Las Vegas,NV,USA,700,1098,398,64.19,-16.1,-2.6
+194,12/2/2025,6:15 PM,12/2/2025,12:15 AM,Tuesday,6.8,1,3,,,1/3,No Limit,Club Montmartre,Club,Paris,,France,400,1617,1217,178.97,219.33,32.25
+195,12/7/2025,8:00 PM,12/7/2025,7:00 AM,Sunday,11.3,2,5,,,2/5,No Limit,MGM Grand,Casino,Las Vegas,NV,USA,800,1617,817,72.3,51.6,4.57
+196,12/9/2025,10:00 PM,12/9/2025,12:00 AM,Tuesday,2.8,10,20,,,10/20,No Limit,Venetian,Casino,Las Vegas,NV,USA,2700,2974,274,97.86,-14.25,-5.09
+197,12/14/2025,10:00 PM,12/14/2025,1:00 AM,Sunday,3.3,2,5,,,2/5,No Limit,Foxwood,Casino,Mashantucket,CT,USA,500,1347,847,256.67,57.6,17.45
+198,12/22/2025,10:30 PM,12/22/2025,12:30 AM,Monday,2.0,1,2,,,1/2,No Limit,Midtown Game,House Game,New York City,NY,USA,100,705,605,302.5,23.0,11.5
+199,12/23/2025,8:30 PM,12/23/2025,1:30 AM,Tuesday,5.9,1,2,,,1/2,No Limit,TCH Social,Club,Dallas,TX,USA,300,1006,706,119.66,73.5,12.46
+200,12/30/2025,7:45 PM,12/30/2025,1:45 AM,Tuesday,6.3,1,2,,,1/2,No Limit,Foxwood,Casino,Mashantucket,CT,USA,200,1068,868,137.78,154.5,24.52
+`;
+const G='#4ade80',R='#f87171',B='#60a5fa',Au='#fbbf24',TICK='#4e6054',GRID='rgba(255,255,255,0.04)';
+let ALL=[], FILTERED=[], charts={};
+let venSortCol='profit', venSortDir=-1;
+
+// Multi-select state
+const MS = { country:new Set(), city:new Set(), type:new Set(), venue:new Set() };
+
+function startApp(){
+  document.getElementById('loading').style.display='flex';
+  loadData();
+}
+startApp();
+
+// ── CSV ───────────────────────────────────────────────────────────────────────
+function parseCSV(txt){
+  const allLines = txt.trim().split('\n');
+  const hdrLine = allLines.find(l => l.replace(/,/g,'').trim() !== '');
+  const hdrIdx = allLines.indexOf(hdrLine);
+  const hdrs = hdrLine.split(',').map(h=>h.replace(/"/g,'').trim());
+  return allLines.slice(hdrIdx+1).map(line=>{
+    if(!line.trim()) return null;
+    const vals=[]; let cur='', inQ=false;
+    for(const c of line){
+      if(c==='"'){inQ=!inQ}
+      else if(c===','&&!inQ){vals.push(cur.trim());cur=''}
+      else cur+=c;
+    }
+    vals.push(cur.trim());
+    const o={};
+    hdrs.forEach((h,i)=>o[h]=(vals[i]||'').replace(/^"|"$/g,''));
+    return o;
+  }).filter(Boolean);
+}
+
+function toSession(r){
+  const profit=parseFloat(r.Profit)||0;
+  const hours=parseFloat(r.Hours)||0;
+  const bbhr=parseFloat(r.BBPerHr)||null;
+  const d=new Date(r.StartDate);
+  if(isNaN(d)||!r.StartDate) return null;
+  return{
+    date:d, profit, hours, bbhr,
+    buyIn:parseFloat(r.BuyIn)||0,
+    cashedOut:parseFloat(r.CashedOut)||0,
+    location:r.Location||'', locType:r.LocationType||'',
+    city:(r.City||'').trim(), state:(r.State||'').trim(),
+    country:(r.Country||'').trim(),
+    stake:(r.Stake||'').trim(),
+    sessionId:r.SessionID||''
+  };
+}
+
+async function loadData(){
+  document.getElementById('err-box').style.display='none';
+  try {
+    const raw = DEMO_CSV;
+    if(!raw||raw.length<50) throw new Error('Demo data missing');
+    const rows = parseCSV(raw);
+    ALL = rows.map(toSession).filter(Boolean).sort((a,b)=>a.date-b.date);
+    populateFilters();
+    applyFilters();
+    document.getElementById('updated').textContent='Demo data';
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+  } catch(e){
+    document.querySelector('.spin').style.display='none';
+    document.getElementById('load-status').style.display='none';
+    const eb=document.getElementById('err-box');
+    eb.style.display='block';
+    eb.textContent='Error loading demo: '+e.message;
+  }
+}
+
+function populateFilters(){
+  const countries=[...new Set(ALL.map(s=>s.country).filter(Boolean))].sort();
+  const cities=[...new Set(ALL.map(s=>s.city).filter(Boolean))].sort();
+  const types=[...new Set(ALL.map(s=>s.locType).filter(Boolean))].sort();
+  const venues=[...new Set(ALL.map(s=>s.location).filter(Boolean))].sort();
+  const stakes=[...new Set(ALL.map(s=>s.stake).filter(Boolean))].sort();
+
+  buildMsOptions('country', countries);
+  buildMsOptions('city', cities);
+  buildMsOptions('type', types);
+  buildMsOptions('venue', venues);
+
+  const stSel = document.getElementById('f-stake');
+  stakes.forEach(st=>{
+    const o=document.createElement('option');
+    o.value=st; o.textContent=st;
+    stSel.appendChild(o);
+  });
+
+  // Set default date range
+  if(ALL.length){
+    document.getElementById('f-start').value = ALL[0].date.toISOString().slice(0,10);
+    document.getElementById('f-end').value = ALL[ALL.length-1].date.toISOString().slice(0,10);
+  }
+}
+
+// ── APPLY FILTERS ─────────────────────────────────────────────────────────────
+function applyFilters(){
+  const startVal = document.getElementById('f-start').value;
+  const endVal = document.getElementById('f-end').value;
+  const start = startVal ? new Date(startVal) : null;
+  const end = endVal ? new Date(endVal+'T23:59:59') : null;
+  const stake = document.getElementById('f-stake').value;
+
+  FILTERED = ALL.filter(s=>{
+    if(start && s.date < start) return false;
+    if(end && s.date > end) return false;
+    if(MS.country.size && !MS.country.has(s.country)) return false;
+    if(MS.city.size && !MS.city.has(s.city)) return false;
+    if(MS.type.size && !MS.type.has(s.locType)) return false;
+    if(MS.venue.size && !MS.venue.has(s.location)) return false;
+    if(stake && s.stake !== stake) return false;
+    return true;
+  });
+
+  const activeCount = (MS.country.size?1:0)+(MS.city.size?1:0)+(MS.type.size?1:0)+(MS.venue.size?1:0)+(stake?1:0);
+  document.getElementById('filter-count').textContent =
+    activeCount ? `${activeCount} filter${activeCount>1?'s':''} · ${FILTERED.length} sessions` : `${FILTERED.length} sessions`;
+
+  render();
+}
+
+function resetFilters(){
+  if(ALL.length){
+    document.getElementById('f-start').value = ALL[0].date.toISOString().slice(0,10);
+    document.getElementById('f-end').value = ALL[ALL.length-1].date.toISOString().slice(0,10);
+  }
+  ['country','city','type','venue'].forEach(k=>{MS[k].clear();updateMsBtn(k);});
+  document.getElementById('f-stake').value='';
+  // Rebuild all options
+  const countries=[...new Set(ALL.map(s=>s.country).filter(Boolean))].sort();
+  const cities=[...new Set(ALL.map(s=>s.city).filter(Boolean))].sort();
+  const types=[...new Set(ALL.map(s=>s.locType).filter(Boolean))].sort();
+  const venues=[...new Set(ALL.map(s=>s.location).filter(Boolean))].sort();
+  buildMsOptions('country',countries);buildMsOptions('city',cities);
+  buildMsOptions('type',types);buildMsOptions('venue',venues);
+  applyFilters();
+}
+
+function showTab(t,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  btn.classList.add('active');
+  if(t==='ai') checkApiKey();
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function stats(arr){
+  if(!arr.length) return{n:0,profit:0,hours:0,hr:0,wr:0,avg:0,buyIn:0,bbhr:null,wins:0,losses:0};
+  const wins=arr.filter(s=>s.profit>0);
+  const p=arr.reduce((a,s)=>a+s.profit,0);
+  const h=arr.reduce((a,s)=>a+s.hours,0);
+  const b=arr.reduce((a,s)=>a+s.buyIn,0);
+  const bb=arr.map(s=>s.bbhr).filter(v=>v!==null&&!isNaN(v));
+  return{n:arr.length,profit:p,hours:h,hr:h?p/h:0,
+    wr:arr.length?wins.length/arr.length*100:0,
+    avg:arr.length?p/arr.length:0,buyIn:b,
+    bbhr:bb.length?bb.reduce((a,v)=>a+v,0)/bb.length:null,
+    wins:wins.length,losses:arr.length-wins.length};
+}
+
+function fmtFull(n){return(n<0?'-$':'$')+Math.abs(Math.round(n)).toLocaleString()}
+function fmtHr(n){return(n<0?'-$':'$')+Math.abs(n).toFixed(2)+'/hr'}
+function fmtPct(n){return(isNaN(n)||n==null?0:n).toFixed(1)+'%'}
+function fmt(n){const a=Math.abs(n);const s=a>=1000?'$'+(a/1000).toFixed(1)+'k':'$'+Math.round(a);return n<0?'-'+s:s;}
+
+function geoOf(s){
+  if(s.country&&s.country!=='USA') return s.country==='UK'?'London (UK)':s.country;
+  if(s.city==='Las Vegas') return 'Las Vegas';
+  if(s.city==='Dallas') return 'Dallas';
+  if(s.city==='New York City'||s.city==='New York') return 'New York City';
+  if(s.state==='CA') return 'California';
+  if(s.state==='FL') return 'Florida';
+  if(s.state==='NJ') return 'Atlantic City';
+  if(s.state==='PA') return 'Pennsylvania';
+  return s.city||'Other';
+}
+
+// ── CHARTS ────────────────────────────────────────────────────────────────────
+function mkChart(id,type,data,opts){
+  if(charts[id]) charts[id].destroy();
+  const ctx=document.getElementById(id);
+  if(!ctx) return;
+  charts[id]=new Chart(ctx,{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a2420',titleColor:TICK,bodyColor:G,borderColor:'rgba(255,255,255,0.08)',borderWidth:1}},...opts}});
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(){
+  const s=stats(FILTERED);
+  // KPIs - only 3
+  document.getElementById('kpi-row').innerHTML=[
+    {label:'Total profit',val:fmtFull(s.profit),sub:`${s.n} sessions · ${Math.round(s.hours).toLocaleString()} hrs`,cls:s.profit>=0?'green':'red',accent:'m-green'},
+    {label:'Hourly rate',val:fmtHr(s.hr),sub:`${s.wins}W / ${s.losses}L`,cls:'blue',accent:'m-blue'},
+    {label:'Win rate',val:fmtPct(s.wr),sub:`BB/hr: ${s.bbhr!==null?s.bbhr.toFixed(1):'—'}`,cls:'gold',accent:'m-gold'},
+  ].map(k=>`<div class="metric ${k.accent}"><div class="m-label">${k.label}</div><div class="m-val ${k.cls}">${k.val}</div><div class="m-sub">${k.sub}</div></div>`).join('');
+
+  // Cumulative chart
+  let cum=0;
+  const cumPts=FILTERED.map(s=>({x:s.date,y:Math.round(cum+=s.profit)}));
+  mkChart('cumChart','line',{datasets:[{data:cumPts,borderColor:G,borderWidth:2,pointRadius:0,fill:{target:'origin',above:'rgba(74,222,128,0.06)'},tension:0.3}]},{
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' $'+c.raw.y.toLocaleString()}}},
+    scales:{x:{type:'time',time:{unit:'quarter',displayFormats:{quarter:"QQQ ''yy"}},grid:{display:false},ticks:{font:{size:10},color:TICK,maxTicksLimit:10}},y:{grid:{color:GRID},border:{display:false},ticks:{font:{size:10},color:TICK,callback:v=>'$'+(v/1000).toFixed(0)+'k'}}}
+  });
+
+  // Monthly last 12
+  const byMo={};
+  FILTERED.forEach(s=>{const k=s.date.getFullYear()+'-'+String(s.date.getMonth()+1).padStart(2,'0');byMo[k]=(byMo[k]||0)+s.profit;});
+  const mKeys=Object.keys(byMo).sort().slice(-12);
+  const mVals=mKeys.map(k=>Math.round(byMo[k]));
+  const mLbls=mKeys.map(k=>{const[y,m]=k.split('-');return['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m]+"'"+(y.slice(2));});
+  mkChart('moChart','bar',{labels:mLbls,datasets:[{data:mVals,backgroundColor:mVals.map(v=>v>=0?'rgba(74,222,128,0.5)':'rgba(248,113,113,0.5)'),borderColor:mVals.map(v=>v>=0?G:R),borderWidth:1,borderRadius:3}]},{
+    scales:{x:{grid:{display:false},ticks:{font:{size:10},color:TICK,autoSkip:false,maxRotation:45}},y:{grid:{color:GRID},border:{display:false},ticks:{font:{size:10},color:TICK,callback:v=>'$'+Math.round(v/1000)+'k'}}}
+  });
+
+  renderVenues();
+  renderGeo();
+  renderStakes();
+  renderSessions();
+}
+
+// ── VENUES ────────────────────────────────────────────────────────────────────
+function renderVenues(){
+  const byV={};
+  FILTERED.forEach(s=>{
+    if(!byV[s.location]) byV[s.location]={n:0,h:0,p:0,w:0,type:s.locType,bi:0,bb:[]};
+    const v=byV[s.location];
+    v.n++;v.h+=s.hours;v.p+=s.profit;v.bi+=s.buyIn;
+    if(s.profit>0)v.w++;
+    if(s.bbhr!==null&&!isNaN(s.bbhr))v.bb.push(s.bbhr);
+  });
+  const sorted=Object.entries(byV).sort((a,b)=>b[1].p-a[1].p);
+  const bmap={'House Game':'b-hg','Casino':'b-ca','Club':'b-cl','Online':'b-on'};
+
+  const top8=sorted.slice(0,8);
+  const maxP=Math.max(...top8.map(([,v])=>Math.abs(v.p)),1);
+  document.getElementById('venProfBars').innerHTML=top8.map(([n,v])=>`
+    <div class="bar-row"><div class="bar-lbl">${n}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.abs(v.p)/maxP*100}%;background:${v.p>=0?G:R}"></div></div>
+    <div class="bar-val" style="color:${v.p>=0?G:R}">${fmt(v.p)}</div></div>`).join('')||'<div class="no-data">No data</div>';
+
+  const hr5=sorted.filter(([,v])=>v.n>=5).map(([n,v])=>({n,hr:v.h?v.p/v.h:0})).sort((a,b)=>b.hr-a.hr).slice(0,8);
+  const maxHR=Math.max(...hr5.map(d=>Math.abs(d.hr)),1);
+  document.getElementById('venHrBars').innerHTML=hr5.map(d=>`
+    <div class="bar-row"><div class="bar-lbl">${d.n}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.abs(d.hr)/maxHR*100}%;background:${d.hr>=0?G:R}"></div></div>
+    <div class="bar-val" style="color:${d.hr>=0?G:R}">${fmtHr(d.hr)}</div></div>`).join('')||'<div class="no-data">No data</div>';
+
+  renderVenueTable(sorted, bmap);
+}
+
+function renderVenueTable(sorted, bmap){
+  const cols=['name','type','n','h','p','hr','wr','avg','bb'];
+  const colMap={name:'Venue',type:'Type',n:'Sessions',h:'Hours',p:'Profit',hr:'$/hr',wr:'Win%',avg:'Avg session',bb:'BB/hr'};
+  const header=`<thead><tr>
+    ${cols.map(c=>`<th class="${['n','h','p','hr','wr','avg','bb'].includes(c)?'r':''} ${venSortCol===c?(venSortDir>0?'sort-asc':'sort-desc'):''}" onclick="sortVen('${c}')">${colMap[c]}</th>`).join('')}
+  </tr></thead>`;
+
+  let data=sorted.map(([n,v])=>{
+    const hr=v.h?v.p/v.h:0;
+    const wr=v.n?v.w/v.n*100:0;
+    const bb=v.bb.length?v.bb.reduce((a,b)=>a+b,0)/v.bb.length:null;
+    return{name:n,type:v.type,n:v.n,h:Math.round(v.h),p:v.p,hr,wr,avg:v.p/v.n,bb};
+  });
+
+  data.sort((a,b)=>{
+    let va=a[venSortCol], vb=b[venSortCol];
+    if(venSortCol==='name'||venSortCol==='type'){va=va||'';vb=vb||'';return venSortDir*(va.localeCompare(vb));}
+    return venSortDir*((va||0)-(vb||0));
+  });
+
+  const bmap2={'House Game':'b-hg','Casino':'b-ca','Club':'b-cl','Online':'b-on'};
+  const rows=data.map(d=>`<tr>
+    <td class="name">${d.name}</td>
+    <td><span class="badge ${bmap2[d.type]||'b-on'}">${d.type}</span></td>
+    <td class="mono r">${d.n}</td>
+    <td class="mono r">${d.h}</td>
+    <td class="${d.p>=0?'pos':'neg'} r">${d.p>=0?'+':''}${fmtFull(d.p)}</td>
+    <td class="mono r ${d.hr>=0?'':'neg'}">${fmtHr(d.hr)}</td>
+    <td class="mono r">${d.wr.toFixed(0)}%</td>
+    <td class="mono r">${fmtFull(d.avg)}</td>
+    <td class="mono r">${d.bb!==null?d.bb.toFixed(1):'—'}</td>
+  </tr>`).join('');
+
+  document.getElementById('venTable').innerHTML=header+'<tbody>'+rows+'</tbody>';
+}
+
+function sortVen(col){
+  if(venSortCol===col) venSortDir*=-1;
+  else{venSortCol=col;venSortDir=-1;}
+  renderVenues();
+}
+
+// ── GEO ───────────────────────────────────────────────────────────────────────
+function renderGeo(){
+  const byG={};
+  FILTERED.forEach(s=>{
+    const g=geoOf(s);
+    if(!byG[g]) byG[g]={n:0,h:0,p:0,w:0,bb:[]};
+    byG[g].n++;byG[g].h+=s.hours;byG[g].p+=s.profit;
+    if(s.profit>0)byG[g].w++;
+    if(s.bbhr!==null&&!isNaN(s.bbhr))byG[g].bb.push(s.bbhr);
+  });
+  const sorted=Object.entries(byG).sort((a,b)=>b[1].p-a[1].p);
+
+  document.getElementById('geoTable').innerHTML=`
+    <thead><tr><th>Geography</th><th class="r">Sessions</th><th class="r">Hours</th><th class="r">Profit</th><th class="r">$/hr</th><th class="r">BB/hr</th><th class="r">Win%</th><th class="r">Avg session</th></tr></thead>
+    <tbody>${sorted.map(([g,v])=>{
+      const hr=v.h?v.p/v.h:0;const wr=v.n?v.w/v.n*100:0;
+      const bb=v.bb.length?v.bb.reduce((a,b)=>a+b,0)/v.bb.length:null;
+      return`<tr><td class="name">${g}</td><td class="mono r">${v.n}</td><td class="mono r">${Math.round(v.h)}</td>
+        <td class="${v.p>=0?'pos':'neg'} r">${v.p>=0?'+':''}${fmtFull(v.p)}</td>
+        <td class="mono r ${hr>=0?'':'neg'}">${fmtHr(hr)}</td>
+        <td class="mono r">${bb!==null?bb.toFixed(1):'—'}</td>
+        <td class="mono r">${wr.toFixed(0)}%</td>
+        <td class="mono r">${fmtFull(v.p/v.n)}</td></tr>`;
+    }).join('')}</tbody>`;
+
+  const hrData=sorted.map(([g,v])=>({label:g,val:v.h?v.p/v.h:0})).sort((a,b)=>b.val-a.val);
+  const maxH=Math.max(...hrData.map(d=>Math.abs(d.val)),1);
+  document.getElementById('geoHrBars').innerHTML=hrData.map(d=>`
+    <div class="bar-row"><div class="bar-lbl">${d.label}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.abs(d.val)/maxH*100}%;background:${d.val>=0?G:R}"></div></div>
+    <div class="bar-val" style="color:${d.val>=0?G:R}">${fmtHr(d.val)}</div></div>`).join('')||'<div class="no-data">No data</div>';
+
+  const top7=sorted.slice(0,7);
+  mkChart('geoChart','bar',{labels:top7.map(([g])=>g),datasets:[{data:top7.map(([,v])=>Math.round(v.p)),backgroundColor:top7.map(([,v])=>v.p>=0?'rgba(74,222,128,0.5)':'rgba(248,113,113,0.5)'),borderColor:top7.map(([,v])=>v.p>=0?G:R),borderWidth:1,borderRadius:4}]},{
+    indexAxis:'y',scales:{x:{grid:{color:GRID},border:{display:false},ticks:{font:{size:9},color:TICK,callback:v=>(v<0?'-':'')+'$'+Math.abs(Math.round(v/1000))+'k'}},y:{grid:{display:false},ticks:{font:{size:10},color:TICK}}}
+  });
+}
+
+// ── STAKES ────────────────────────────────────────────────────────────────────
+function renderStakes(){
+  const byS={};
+  FILTERED.forEach(s=>{
+    const k=s.stake||'Unknown';
+    if(!byS[k]) byS[k]={n:0,h:0,p:0,w:0,bb:[],sessions:[]};
+    byS[k].n++;byS[k].h+=s.hours;byS[k].p+=s.profit;
+    if(s.profit>0)byS[k].w++;
+    if(s.bbhr!==null&&!isNaN(s.bbhr))byS[k].bb.push(s.bbhr);
+    byS[k].sessions.push(s);
+  });
+
+  const sorted=Object.entries(byS).sort((a,b)=>b[1].p-a[1].p);
+
+  // Main stakes table
+  document.getElementById('stakesTable').innerHTML=`
+    <thead><tr><th>Stake</th><th class="r">Sessions</th><th class="r">Hours</th><th class="r">Profit</th><th class="r">$/hr</th><th class="r">Win%</th><th class="r">BB/hr</th></tr></thead>
+    <tbody>${sorted.map(([k,v])=>{
+      const hr=v.h?v.p/v.h:0;const wr=v.n?v.w/v.n*100:0;
+      const bb=v.bb.length?v.bb.reduce((a,b)=>a+b,0)/v.bb.length:null;
+      return`<tr><td class="name">${k}</td><td class="mono r">${v.n}</td><td class="mono r">${Math.round(v.h)}</td>
+        <td class="${v.p>=0?'pos':'neg'} r">${v.p>=0?'+':''}${fmtFull(v.p)}</td>
+        <td class="mono r ${hr>=0?'':'neg'}">${fmtHr(hr)}</td>
+        <td class="mono r">${wr.toFixed(0)}%</td>
+        <td class="mono r">${bb!==null?bb.toFixed(1):'—'}</td></tr>`;
+    }).join('')}</tbody>`;
+
+  // Biggest wins per stake
+  const winRows=[];
+  const lossRows=[];
+  sorted.forEach(([k,v])=>{
+    const best=v.sessions.filter(s=>s.profit>0).sort((a,b)=>b.profit-a.profit)[0];
+    const worst=v.sessions.filter(s=>s.profit<0).sort((a,b)=>a.profit-b.profit)[0];
+    if(best) winRows.push({stake:k,s:best});
+    if(worst) lossRows.push({stake:k,s:worst});
+  });
+  winRows.sort((a,b)=>b.s.profit-a.s.profit);
+  lossRows.sort((a,b)=>a.s.profit-b.s.profit);
+
+  const sessHdr=`<thead><tr><th>Stake</th><th>Date</th><th>Venue</th><th class="r">Profit</th></tr></thead>`;
+  document.getElementById('stakeWinsTable').innerHTML=sessHdr+'<tbody>'+winRows.slice(0,10).map(({stake,s})=>`
+    <tr><td class="mono">${stake}</td>
+    <td class="mono">${s.date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'})}</td>
+    <td class="name">${s.location}</td>
+    <td class="pos r">+${fmtFull(s.profit)}</td></tr>`).join('')+'</tbody>';
+
+  document.getElementById('stakeLossTable').innerHTML=sessHdr+'<tbody>'+lossRows.slice(0,10).map(({stake,s})=>`
+    <tr><td class="mono">${stake}</td>
+    <td class="mono">${s.date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'})}</td>
+    <td class="name">${s.location}</td>
+    <td class="neg r">${fmtFull(s.profit)}</td></tr>`).join('')+'</tbody>';
+}
+
+// ── SESSIONS ──────────────────────────────────────────────────────────────────
+function renderSessions(){
+  const bmap={'House Game':'b-hg','Casino':'b-ca','Club':'b-cl','Online':'b-on'};
+  const hdr=`<thead><tr><th>Date</th><th>Venue</th><th>Type</th><th>Stake</th><th class="r">Hours</th><th class="r">Buy-in</th><th class="r">Profit</th><th class="r">$/hr</th></tr></thead>`;
+  const row=s=>`<tr>
+    <td class="mono">${s.date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+    <td class="name">${s.location}</td>
+    <td><span class="badge ${bmap[s.locType]||'b-on'}">${s.locType}</span></td>
+    <td class="mono">${s.stake}</td>
+    <td class="mono r">${s.hours.toFixed(1)}</td>
+    <td class="mono r">$${Math.round(s.buyIn).toLocaleString()}</td>
+    <td class="${s.profit>=0?'pos':'neg'} r">${s.profit>=0?'+':''}${fmtFull(s.profit)}</td>
+    <td class="mono r">${s.hours>0?fmtHr(s.profit/s.hours):'—'}</td></tr>`;
+
+  const byProfit=[...FILTERED].sort((a,b)=>b.profit-a.profit);
+  document.getElementById('topSess').innerHTML=hdr+'<tbody>'+byProfit.slice(0,10).map(row).join('')+'</tbody>';
+  document.getElementById('botSess').innerHTML=hdr+'<tbody>'+byProfit.slice(-10).reverse().map(row).join('')+'</tbody>';
+  const byDate=[...FILTERED].sort((a,b)=>b.date-a.date);
+  document.getElementById('sess-count').textContent=`— ${byDate.length} sessions`;
+  document.getElementById('allSess').innerHTML=hdr+'<tbody>'+byDate.map(row).join('')+'</tbody>';
+}
+
+// ── AI INSIGHTS ───────────────────────────────────────────────────────────────
+let currentAiType = 'general';
+
+function checkApiKey(){
+  const key=localStorage.getItem('anthropic_key');
+  document.getElementById('ai-key-prompt').style.display=key?'none':'block';
+  document.getElementById('ai-main').style.display=key?'block':'none';
+  // Restore bankroll
+  const br=localStorage.getItem('bankroll_val');
+  if(br) document.getElementById('bankroll-val').value=br;
+}
+
+function saveApiKey(){
+  const key=document.getElementById('api-key-input').value.trim();
+  if(!key||!key.startsWith('sk-ant')){alert('Please enter a valid Anthropic API key');return;}
+  localStorage.setItem('anthropic_key',key);
+  checkApiKey();
+}
+
+function clearApiKey(){
+  localStorage.removeItem('anthropic_key');
+  document.getElementById('api-key-input').value='';
+  checkApiKey();
+}
+
+function saveBankroll(){
+  const val=document.getElementById('bankroll-val').value;
+  if(val) localStorage.setItem('bankroll_val',val);
+}
+
+function selectAiType(type){
+  currentAiType=type;
+  document.querySelectorAll('.ai-type-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('atype-'+type).classList.add('active');
+  document.getElementById('bankroll-input-wrap').style.display=type==='bankroll'?'block':'none';
+  document.getElementById('smart-input-wrap').style.display=type==='smart'?'block':'none';
+  document.getElementById('ai-results').style.display='none';
+  document.getElementById('ai-empty').style.display='block';
+  document.getElementById('ai-empty').textContent='Click Generate to run this analysis';
+  // Restore bankroll value
+  const br=localStorage.getItem('bankroll_val');
+  if(br) document.getElementById('bankroll-val').value=br;
+}
+
+function setQ(btn){
+  document.getElementById('smart-question').value=btn.textContent.trim();
+}
+
+function buildCoreSummary(){
+  const s=stats(FILTERED);
+  const byV={};
+  FILTERED.forEach(s=>{
+    if(!byV[s.location]) byV[s.location]={n:0,h:0,p:0,w:0,type:s.locType};
+    byV[s.location].n++;byV[s.location].h+=s.hours;byV[s.location].p+=s.profit;
+    if(s.profit>0)byV[s.location].w++;
+  });
+  const topV=Object.entries(byV).sort((a,b)=>b[1].p-a[1].p).slice(0,12)
+    .map(([n,v])=>`${n}(${v.type}): $${Math.round(v.p)}, ${v.n}sess, $${v.h?Math.round(v.p/v.h):0}/hr, ${Math.round(v.w/v.n*100)}%WR`).join('\n');
+  const byMo={};
+  FILTERED.forEach(s=>{const k=s.date.getFullYear()+'-'+String(s.date.getMonth()+1).padStart(2,'0');byMo[k]=(byMo[k]||0)+s.profit;});
+  const mo=Object.entries(byMo).sort().slice(-12).map(([k,v])=>`${k}:$${Math.round(v)}`).join(', ');
+  const byType={};
+  FILTERED.forEach(s=>{if(!byType[s.locType])byType[s.locType]={n:0,h:0,p:0};byType[s.locType].n++;byType[s.locType].h+=s.hours;byType[s.locType].p+=s.profit;});
+  const typeStr=Object.entries(byType).map(([t,v])=>`${t}: $${Math.round(v.p)}, ${v.n}sess, $${v.h?Math.round(v.p/v.h):0}/hr`).join('\n');
+  const byStake={};
+  FILTERED.forEach(s=>{const k=s.stake||'?';if(!byStake[k])byStake[k]={n:0,h:0,p:0};byStake[k].n++;byStake[k].h+=s.hours;byStake[k].p+=s.profit;});
+  const stakeStr=Object.entries(byStake).sort((a,b)=>b[1].p-a[1].p).slice(0,10).map(([k,v])=>`${k}: $${Math.round(v.p)}, ${v.n}sess, $${v.h?Math.round(v.p/v.h):0}/hr`).join('\n');
+  return {s, topV, mo, typeStr, stakeStr};
+}
+
+function buildPatternData(){
+  // By weekday
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const byDay={};
+  days.forEach(d=>byDay[d]={n:0,h:0,p:0,w:0});
+  FILTERED.forEach(s=>{
+    const d=days[s.date.getDay()];
+    if(!byDay[d]) byDay[d]={n:0,h:0,p:0,w:0};
+    byDay[d].n++;byDay[d].h+=s.hours;byDay[d].p+=s.profit;
+    if(s.profit>0)byDay[d].w++;
+  });
+  const dayStr=days.map(d=>{const v=byDay[d];return v.n?`${d}: ${v.n}sess, $${Math.round(v.p)}, $${v.h?Math.round(v.p/v.h):0}/hr, ${Math.round(v.w/v.n*100)}%WR`:null;}).filter(Boolean).join('\n');
+
+  // By session length bucket
+  const buckets={'<3hrs':[],'3-6hrs':[],'6-9hrs':[],'9-12hrs':[],'>12hrs':[]};
+  FILTERED.forEach(s=>{
+    if(s.hours<3) buckets['<3hrs'].push(s);
+    else if(s.hours<6) buckets['3-6hrs'].push(s);
+    else if(s.hours<9) buckets['6-9hrs'].push(s);
+    else if(s.hours<12) buckets['9-12hrs'].push(s);
+    else buckets['>12hrs'].push(s);
+  });
+  const lenStr=Object.entries(buckets).map(([k,arr])=>{
+    if(!arr.length) return null;
+    const p=arr.reduce((a,s)=>a+s.profit,0);
+    const h=arr.reduce((a,s)=>a+s.hours,0);
+    const w=arr.filter(s=>s.profit>0).length;
+    return `${k}: ${arr.length}sess, $${Math.round(p)}, $${h?Math.round(p/h):0}/hr, ${Math.round(w/arr.length*100)}%WR`;
+  }).filter(Boolean).join('\n');
+
+  // Rolling 30-session win rate
+  const last30=[...FILTERED].slice(-30);
+  const prev30=[...FILTERED].slice(-60,-30);
+  const l30wr=last30.length?last30.filter(s=>s.profit>0).length/last30.length*100:0;
+  const p30wr=prev30.length?prev30.filter(s=>s.profit>0).length/prev30.length*100:0;
+  const l30hr=last30.length?last30.reduce((a,s)=>a+s.profit,0)/Math.max(1,last30.reduce((a,s)=>a+s.hours,0)):0;
+  const p30hr=prev30.length?prev30.reduce((a,s)=>a+s.profit,0)/Math.max(1,prev30.reduce((a,s)=>a+s.hours,0)):0;
+
+  return {dayStr, lenStr, l30wr, p30wr, l30hr, p30hr, last30, prev30};
+}
+
+function buildBankrollData(){
+  const now=new Date();
+  const d30=new Date(now);d30.setDate(d30.getDate()-30);
+  const d90=new Date(now);d90.setDate(d90.getDate()-90);
+
+  const last30=FILTERED.filter(s=>s.date>=d30);
+  const last90=FILTERED.filter(s=>s.date>=d90);
+  const prior60=FILTERED.filter(s=>s.date>=d90&&s.date<d30);
+
+  const p30=last30.reduce((a,s)=>a+s.profit,0);
+  const p90=last90.reduce((a,s)=>a+s.profit,0);
+  const h30=last30.reduce((a,s)=>a+s.hours,0);
+  const h90=last90.reduce((a,s)=>a+s.hours,0);
+  const wr30=last30.length?last30.filter(s=>s.profit>0).length/last30.length*100:0;
+  const wr90=last90.length?last90.filter(s=>s.profit>0).length/last90.length*100:0;
+
+  // Monthly breakdown last 6 months
+  const byMo={};
+  FILTERED.forEach(s=>{
+    if(s.date<d90) return;
+    const k=s.date.getFullYear()+'-'+String(s.date.getMonth()+1).padStart(2,'0');
+    byMo[k]=(byMo[k]||0)+s.profit;
+  });
+  const moStr=Object.entries(byMo).sort().map(([k,v])=>`${k}:$${Math.round(v)}`).join(', ');
+
+  // Downswing detection: longest consecutive losing sessions
+  let maxLoss=0,curLoss=0,maxLossAmt=0,curLossAmt=0;
+  FILTERED.forEach(s=>{
+    if(s.profit<0){curLoss++;curLossAmt+=s.profit;if(curLoss>maxLoss){maxLoss=curLoss;maxLossAmt=curLossAmt;}}
+    else{curLoss=0;curLossAmt=0;}
+  });
+
+  return {p30,p90,h30,h90,wr30,wr90,moStr,maxLoss,maxLossAmt,last30n:last30.length,last90n:last90.length};
+}
+
+function buildPrompt(type){
+  const {s,topV,mo,typeStr,stakeStr}=buildCoreSummary();
+  const baseData=`PLAYER DATA (${s.n} sessions filtered)
+Overall: $${Math.round(s.profit)} profit, $${s.hr.toFixed(2)}/hr, ${s.wr.toFixed(1)}% WR, ${Math.round(s.hours)} hours
+
+TOP VENUES:\n${topV}
+BY TYPE:\n${typeStr}
+BY STAKE:\n${stakeStr}
+MONTHLY (last 12):\n${mo}`;
+
+  if(type==='general'){
+    return `You are analysing poker performance data for a professional player. Give concise bullet-point insights in exactly 3 sections. Be specific, data-driven, and reference actual numbers.
+
+Format: ALL CAPS section header, then bullet points using "•". 3-4 bullets per section.
+
+Sections:
+1. OVERALL PERFORMANCE SUMMARY
+2. STRENGTHS & WEAKNESSES
+3. VENUE & GAME SELECTION ADVICE
+
+${baseData}`;
+  }
+
+  if(type==='patterns'){
+    const {dayStr,lenStr,l30wr,p30wr,l30hr,p30hr}=buildPatternData();
+    return `You are analysing poker session patterns for a professional player. Identify non-obvious patterns and give actionable insights. Be specific with numbers.
+
+Format: ALL CAPS section header, then bullet points using "•". 3-4 bullets per section.
+
+Sections:
+1. WEEKDAY PATTERNS
+2. SESSION LENGTH PATTERNS
+3. RECENT FORM & TREND ANALYSIS
+
+${baseData}
+
+BY WEEKDAY:\n${dayStr}
+
+BY SESSION LENGTH:\n${lenStr}
+
+RECENT FORM:
+Last 30 sessions: ${l30wr.toFixed(1)}% WR, $${l30hr.toFixed(2)}/hr
+Prior 30 sessions: ${p30wr.toFixed(1)}% WR, $${p30hr.toFixed(2)}/hr`;
+  }
+
+  if(type==='bankroll'){
+    const bankroll=parseFloat(document.getElementById('bankroll-val').value)||0;
+    const {p30,p90,h30,h90,wr30,wr90,moStr,maxLoss,maxLossAmt,last30n,last90n}=buildBankrollData();
+    return `You are a poker bankroll management advisor reviewing a professional player's financial health. Be direct and give specific, actionable advice.
+
+Format: Start with a STATUS line (GREEN, YELLOW, or RED) and one sentence reason. Then 3 ALL CAPS sections with bullet points using "•".
+
+Sections:
+1. BANKROLL ASSESSMENT
+2. RISK FLAGS
+3. RECOMMENDATIONS
+
+BANKROLL DATA:
+Current bankroll: $${bankroll.toLocaleString()}
+Last 30 days: $${Math.round(p30)} profit, ${last30n} sessions, ${h30.toFixed(0)} hours, ${wr30.toFixed(1)}% WR
+Last 90 days: $${Math.round(p90)} profit, ${last90n} sessions, ${h90.toFixed(0)} hours, ${wr90.toFixed(1)}% WR
+Longest losing streak: ${maxLoss} sessions ($${Math.round(maxLossAmt)} loss)
+Monthly P&L last 6 months: ${moStr}
+${baseData}`;
+  }
+
+  if(type==='smart'){
+    const q=document.getElementById('smart-question').value.trim()||'What are my biggest areas for improvement?';
+    return `You are a poker performance analyst. A professional player is asking you a specific question about their game. Answer directly and specifically using their data. Reference actual numbers. Give 3-5 bullet points using "•" after a brief one-sentence answer.
+
+Question: "${q}"
+
+${baseData}
+
+BY WEEKDAY:\n${(()=>{const {dayStr}=buildPatternData();return dayStr;})()}
+BY SESSION LENGTH:\n${(()=>{const {lenStr}=buildPatternData();return lenStr;})()}`;
+  }
+}
+
+async function runAi(){
+  const key=localStorage.getItem('anthropic_key');
+  if(!key){checkApiKey();return;}
+  if(!FILTERED.length){alert('No sessions match current filters');return;}
+  if(currentAiType==='bankroll'&&!document.getElementById('bankroll-val').value){
+    alert('Please enter your current bankroll amount');
+    document.getElementById('bankroll-val').focus();
+    return;
+  }
+
+  const loadMsgs={
+    general:'Analysing your performance...',
+    patterns:'Detecting patterns in your sessions...',
+    bankroll:'Assessing your bankroll health...',
+    smart:'Thinking through your question...'
+  };
+
+  document.getElementById('ai-loading').style.display='block';
+  document.getElementById('ai-load-msg').textContent=loadMsgs[currentAiType]||'Analysing...';
+  document.getElementById('ai-results').style.display='none';
+  document.getElementById('ai-error').style.display='none';
+  document.getElementById('ai-empty').style.display='none';
+  document.getElementById('gen-btn').disabled=true;
+
+  try{
+    const prompt=buildPrompt(currentAiType);
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})
+    });
+    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'API error '+res.status);}
+    const data=await res.json();
+    renderInsights(data.content[0].text, currentAiType);
+  }catch(e){
+    document.getElementById('ai-error').style.display='block';
+    document.getElementById('ai-error').textContent='Error: '+e.message+(e.message.includes('401')?' — check your API key':'');
+    document.getElementById('ai-empty').style.display='block';
+  }finally{
+    document.getElementById('ai-loading').style.display='none';
+    document.getElementById('gen-btn').disabled=false;
+  }
+}
+
+function renderInsights(text, type){
+  const colors=[G,B,Au,'#c084fc'];
+  const el=document.getElementById('ai-results');
+
+  // Bankroll special rendering with traffic light
+  if(type==='bankroll'){
+    const statusMatch=text.match(/^(GREEN|YELLOW|RED)[:\s-]+(.*)/im);
+    let statusHtml='';
+    if(statusMatch){
+      const status=statusMatch[1].toUpperCase();
+      const reason=statusMatch[2].trim();
+      const statusColors={GREEN:G,YELLOW:Au,RED:R};
+      const col=statusColors[status]||G;
+      statusHtml=`<div class="bk-status" style="background:rgba(${status==='GREEN'?'74,222,128':status==='YELLOW'?'251,191,36':'248,113,113'},.08);border:1px solid ${col};margin-bottom:16px">
+        <div class="bk-light" style="background:${col};box-shadow:0 0 8px ${col}"></div>
+        <div><span style="font-family:var(--mono);font-size:11px;font-weight:500;color:${col}">${status}</span><span style="font-size:13px;color:var(--text2);margin-left:10px">${reason}</span></div>
+      </div>`;
+      text=text.replace(statusMatch[0],'').trim();
+    }
+    el.innerHTML=statusHtml+parseAndRenderSections(text,colors);
+  } else {
+    el.innerHTML=parseAndRenderSections(text,colors);
+  }
+
+  el.style.display='block';
+  document.getElementById('ai-empty').style.display='none';
+}
+
+function parseAndRenderSections(text,colors){
+  const lines=text.split('\n');
+  const parsed=[];let current=null;
+  for(const line of lines){
+    const t=line.trim();
+    if(!t) continue;
+    if(t===t.toUpperCase()&&t.replace(/[^A-Z\s]/g,'').length>3&&!t.startsWith('•')){
+      if(current) parsed.push(current);
+      current={title:t,bullets:[]};
+    } else if((t.startsWith('•')||t.startsWith('-'))&&current){
+      current.bullets.push(t.replace(/^[•\-]\s*/,'').trim());
+    } else if(current&&t&&!t.match(/^\d+\.\s/)){
+      if(current.bullets.length) current.bullets[current.bullets.length-1]+=' '+t;
+      else current.bullets.push(t);
+    }
+  }
+  if(current) parsed.push(current);
+
+  if(!parsed.length) return `<div class="ai-card"><div style="font-size:13px;color:var(--text2);line-height:1.8;white-space:pre-wrap">${text}</div></div>`;
+
+  return `<div style="display:grid;grid-template-columns:repeat(${Math.min(parsed.length,3)},1fr);gap:12px">
+    ${parsed.map((sec,i)=>`
+      <div class="ai-card" style="border-top:2px solid ${colors[i%colors.length]}">
+        <div class="ai-sec-title" style="color:${colors[i%colors.length]}">${sec.title}</div>
+        ${sec.bullets.map(b=>`<div class="ai-bullet"><span style="color:${colors[i%colors.length]};flex-shrink:0;margin-top:2px">•</span><span>${b}</span></div>`).join('')}
+      </div>`).join('')}
+  </div>`;
+}
+
+</script>
+</body>
+</html>
