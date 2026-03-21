@@ -44,7 +44,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 
 /* FILTERS */
 .filters{padding:10px 28px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.fg{display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:8px 10px}
+.fg{display:flex;flex-direction:column;gap:4px}
 .fl{font-family:var(--mono);font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--text2)}
 .date-wrap{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 input[type=date]{font-family:var(--mono);font-size:11px;background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;cursor:pointer;outline:none;width:130px;transition:border-color .15s}
@@ -59,19 +59,19 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.4)}
 .ms-btn:hover{border-color:var(--text3)}.ms-btn.has-val{border-color:var(--green);color:var(--green)}
 
 /* MODAL OVERLAY */
-.ms-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
-.ms-overlay.open{display:flex}
-.ms-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:380px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.6);overflow:hidden}
-.ms-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
-.ms-modal-title{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--text2)}
-.ms-modal-close{width:28px;height:28px;border-radius:50%;background:var(--bg3);border:none;color:var(--text3);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ms-overlay{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,.75);z-index:9999;display:none;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);overscroll-behavior:contain}
+.ms-overlay.open{display:block}
+.ms-modal{background:var(--bg2);border-top:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 -8px 40px rgba(0,0,0,.8);overflow:hidden;position:fixed;bottom:0;left:0;right:0;z-index:10000;animation:sheetUp .2s ease}
+.ms-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 0;flex-shrink:0}
+.ms-modal-title{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text2)}
+.ms-modal-close{font-size:22px;color:var(--text3);cursor:pointer;padding:4px 8px;background:none;border:none;line-height:1;touch-action:manipulation}
 .ms-modal-close:hover{background:var(--border2);color:var(--text)}
-.ms-search{width:100%;font-family:var(--mono);font-size:11px;background:var(--bg3);color:var(--text);border:none;border-bottom:1px solid var(--border);padding:10px 16px;outline:none}
+.ms-search{width:100%;font-family:var(--mono);font-size:15px;background:var(--bg3);color:var(--text);border:none;border-bottom:1px solid var(--border);padding:14px 18px;outline:none;-webkit-appearance:none}
 .ms-search::placeholder{color:var(--text3)}
 .ms-opts-wrap{overflow-y:auto;flex:1}
-.ms-option{display:flex;align-items:center;gap:12px;padding:10px 16px;font-size:13px;color:var(--text2);cursor:pointer;transition:background .1s;border-bottom:1px solid rgba(255,255,255,0.03)}
+.ms-option{display:flex;align-items:center;gap:12px;padding:14px 18px;font-size:15px;color:var(--text2);cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04)}
 .ms-option:hover{background:var(--bg3)}
-.ms-option input[type=checkbox]{accent-color:var(--green);width:15px;height:15px;cursor:pointer;flex-shrink:0}
+.ms-option input[type=checkbox]{accent-color:var(--green);width:20px;height:20px;cursor:pointer;flex-shrink:0}
 .ms-option.selected{color:var(--text)}
 .ms-modal-ftr{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}
 .ms-apply-btn{flex:1;font-family:var(--mono);font-size:11px;padding:9px;background:transparent;border:1px solid var(--green);border-radius:6px;color:var(--green);cursor:pointer;letter-spacing:.05em;transition:all .15s}
@@ -184,7 +184,7 @@ td.name{color:var(--text)}
   .fg{flex-shrink:0}
   .filter-sep{display:none}
   input[type=date]{width:110px;font-size:10px;padding:4px 6px}
-  .ms-btn{min-width:110px;font-size:10px;padding:4px 22px 4px 8px;border-color:var(--border2)}
+  .ms-btn{min-width:100px;font-size:10px;padding:5px 20px 5px 8px}
   .ms-dropdown{min-width:180px}
   select.game-sel{min-width:100px;font-size:10px}
   .reset-btn{font-size:9px;padding:4px 10px}
@@ -226,7 +226,7 @@ td.name{color:var(--text)}
   .metrics{grid-template-columns:1fr}
   .metrics .metric:last-child{grid-column:auto}
   .m-val{font-size:22px}
-  .filters{padding:8px 12px}
+  .filters{padding:8px 12px;gap:6px}
   .main{padding:10px 12px}
   .nav-btn{padding:9px 8px;font-size:8px}
   input[type=date]{width:100px;font-size:9px}
@@ -305,7 +305,7 @@ td.name{color:var(--text)}
     <!-- MODAL OVERLAYS -->
     <div class="ms-overlay" id="modal-country" onclick="closeModal('country',event)">
       <div class="ms-modal">
-        <div class="ms-modal-hdr">
+        <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0"></div><div class="ms-modal-hdr">
           <div class="ms-modal-title">Select countries</div>
           <button class="ms-modal-close" onclick="closeModalDirect('country')">✕</button>
         </div>
@@ -320,7 +320,7 @@ td.name{color:var(--text)}
 
     <div class="ms-overlay" id="modal-city" onclick="closeModal('city',event)">
       <div class="ms-modal">
-        <div class="ms-modal-hdr">
+        <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0"></div><div class="ms-modal-hdr">
           <div class="ms-modal-title">Select cities</div>
           <button class="ms-modal-close" onclick="closeModalDirect('city')">✕</button>
         </div>
@@ -335,7 +335,7 @@ td.name{color:var(--text)}
 
     <div class="ms-overlay" id="modal-type" onclick="closeModal('type',event)">
       <div class="ms-modal">
-        <div class="ms-modal-hdr">
+        <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0"></div><div class="ms-modal-hdr">
           <div class="ms-modal-title">Select venue types</div>
           <button class="ms-modal-close" onclick="closeModalDirect('type')">✕</button>
         </div>
@@ -349,7 +349,7 @@ td.name{color:var(--text)}
 
     <div class="ms-overlay" id="modal-venue" onclick="closeModal('venue',event)">
       <div class="ms-modal">
-        <div class="ms-modal-hdr">
+        <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0"></div><div class="ms-modal-hdr">
           <div class="ms-modal-title">Select venues</div>
           <button class="ms-modal-close" onclick="closeModalDirect('venue')">✕</button>
         </div>
