@@ -305,6 +305,16 @@ td.name{color:var(--text)}
     
 
     <div class="filter-sep"></div>
+
+    <!-- GAME / STAKE -->
+    <div class="fg">
+      <div class="fl">Game (stake)</div>
+      <select class="game-sel" id="f-stake" onchange="applyFilters()">
+        <option value="">All stakes</option>
+      </select>
+    </div>
+
+    <div class="filter-sep"></div>
     <button class="reset-btn" onclick="resetFilters()">✕ Reset</button>
     <span id="filter-count"></span>
   </div>
