@@ -233,17 +233,17 @@ td.name{color:var(--text)}
   .ms-btn{min-width:90px;font-size:9px}
 }
 
-.ai-type-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;cursor:pointer;transition:border-color .15s;text-align:center}
-.ai-type-card:hover{border-color:var(--color-border-secondary)}
+.ai-type-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--border-radius-lg);padding:14px;cursor:pointer;transition:border-color .15s;text-align:center}
+.ai-type-card:hover{border-color:var(--border2)}
 .ai-type-card.active{border-color:#1D9E75;background:rgba(29,158,117,0.05)}
 .ai-type-icon{font-size:20px;margin-bottom:6px}
-.ai-type-label{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--color-text-primary);letter-spacing:.04em;margin-bottom:4px;text-transform:uppercase}
-.ai-type-sub{font-size:11px;color:var(--color-text-tertiary);line-height:1.4}
-.smart-sugg{font-family:var(--mono);font-size:10px;padding:4px 10px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.ai-type-label{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--text);letter-spacing:.04em;margin-bottom:4px;text-transform:uppercase}
+.ai-type-sub{font-size:11px;color:var(--text3);line-height:1.4}
+.smart-sugg{font-family:var(--mono);font-size:10px;padding:4px 10px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--border-radius-md);color:var(--text2);cursor:pointer;transition:all .15s}
 .smart-sugg:hover{border-color:#1D9E75;color:#1D9E75}
-.ai-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px}
+.ai-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--border-radius-lg);padding:16px}
 .ai-sec-title{font-family:var(--mono);font-size:9px;letter-spacing:.06em;margin-bottom:12px}
-.ai-bullet{display:flex;gap:10px;margin-bottom:9px;font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.ai-bullet{display:flex;gap:10px;margin-bottom:9px;font-size:13px;color:var(--text2);line-height:1.6}
 .bk-status{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:var(--border-radius-md);margin-bottom:14px}
 .bk-light{width:14px;height:14px;border-radius:50%;flex-shrink:0}
 </style>
@@ -410,34 +410,33 @@ td.name{color:var(--text)}
     <!-- AI INSIGHTS -->
     <div id="tab-ai" class="sec">
       <div style="max-width:560px;margin:40px auto">
-        <div style="font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px">AI Insights</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--color-text-tertiary);margin-bottom:24px;letter-spacing:.04em">SELECT AN ANALYSIS TYPE BELOW</div>
+        <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px">AI Insights</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:24px;letter-spacing:.04em">SELECT AN ANALYSIS TYPE BELOW</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px">
-          <button onclick="showDemoMsg()" style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='#1D9E75'" onmouseout="this.style.borderColor=''">
+          <button onclick="showDemoMsg()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='#4ade80'" onmouseout="this.style.borderColor=''">
             <div style="font-size:20px;margin-bottom:8px">📊</div>
-            <div style="font-family:var(--mono);font-size:9px;font-weight:500;color:var(--color-text-primary);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">General Analysis</div>
-            <div style="font-size:11px;color:var(--color-text-tertiary);line-height:1.4">Performance summary, strengths & venue advice</div>
+            <div style="font-family:var(--mono);font-size:9px;font-weight:500;color:var(--text);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">General Analysis</div>
+            <div style="font-size:11px;color:var(--text2);line-height:1.4">Performance summary, strengths & venue advice</div>
           </button>
-          <button onclick="showDemoMsg()" style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='#1D9E75'" onmouseout="this.style.borderColor=''">
+          <button onclick="showDemoMsg()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='#4ade80'" onmouseout="this.style.borderColor=''">
             <div style="font-size:20px;margin-bottom:8px">🔍</div>
-            <div style="font-family:var(--mono);font-size:9px;font-weight:500;color:var(--color-text-primary);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">Pattern Detection</div>
-            <div style="font-size:11px;color:var(--color-text-tertiary);line-height:1.4">Weekday, session length & streak patterns</div>
+            <div style="font-family:var(--mono);font-size:9px;font-weight:500;color:var(--text);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">Pattern Detection</div>
+            <div style="font-size:11px;color:var(--text2);line-height:1.4">Weekday, session length & streak patterns</div>
           </button>
-          <button onclick="showDemoMsg()" style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='#1D9E75'" onmouseout="this.style.borderColor=''">
+          <button onclick="showDemoMsg()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='#4ade80'" onmouseout="this.style.borderColor=''">
             <div style="font-size:20px;margin-bottom:8px">💰</div>
-            <div style="font-family:var(--mono);font-size:9px;font-weight:500;color:var(--color-text-primary);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">Bankroll Health</div>
-            <div style="font-size:11px;color:var(--color-text-tertiary);line-height:1.4">30-day vs 90-day trend with traffic light</div>
+            <div style="font-family:var(--mono);font-size:9px;font-weight:500;color:var(--text);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">Bankroll Health</div>
+            <div style="font-size:11px;color:var(--text2);line-height:1.4">30-day vs 90-day trend with traffic light</div>
           </button>
-          <button onclick="showDemoMsg()" style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='#1D9E75'" onmouseout="this.style.borderColor=''">
+          <button onclick="showDemoMsg()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:20px 16px;cursor:pointer;text-align:center;transition:border-color .15s" onmouseover="this.style.borderColor='#4ade80'" onmouseout="this.style.borderColor=''">
             <div style="font-size:20px;margin-bottom:8px">🎯</div>
-            <div style="font-family:var(--mono);font-size:9px;font-weight:500;color:var(--color-text-primary);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">Smart Analysis</div>
-            <div style="font-size:11px;color:var(--color-text-tertiary);line-height:1.4">Ask a specific question about your game</div>
+            <div style="font-family:var(--mono);font-size:9px;font-weight:500;color:var(--text);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">Smart Analysis</div>
+            <div style="font-size:11px;color:var(--text2);line-height:1.4">Ask a specific question about your game</div>
           </button>
         </div>
-        <div id="demo-msg" style="display:none;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:16px 20px;text-align:center">
-          <div style="font-family:var(--mono);font-size:11px;color:var(--color-text-secondary);line-height:1.7">Demo version does not connect to Claude API</div>
+        <div id="demo-msg" style="display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:16px 20px;text-align:center">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.7">Demo version does not connect to Claude API</div>
         </div>
       </div>
     </div>
-
 >
